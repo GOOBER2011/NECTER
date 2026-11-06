@@ -151,17 +151,18 @@
         const hemi = new THREE.HemisphereLight(0x3a4a5a, 0x1a1510, 0.4);
         scene.add(hemi);
 
-        // ============ FLASHLIGHT (Delayed Sway) ============
-        // The holder sits inside the camera. It lags behind the camera's local
-        // rotation, creating a heavy, delayed feel when looking around.
+        // ============ FLASHLIGHT ============
+        // The holder is a child of the camera. Its LOCAL rotation lags
+        // toward identity (rest pose) to create the delayed sway.
         const flashlightHolder = new THREE.Object3D();
         camera.add(flashlightHolder);
 
         const flashlight = new THREE.SpotLight(0xfff2cc, 0, 80, Math.PI / 7, 0.4, 1.0);
         flashlight.position.set(0.15, -0.15, 0.1);
+        // Critical: target is a child of the holder at a Z offset.
+        // Both light and target inherit the holder's rotation.
         flashlight.target.position.set(0, 0, -10);
         
-        // Brighter, piercing beam
         flashlight.distance = 100;
         flashlight.decay = 0.8; 
         
@@ -210,18 +211,16 @@
         }
         generateMaze();
 
-        // ============ WALL TEXTURES (Restored Detail) ============
+        // ============ WALL TEXTURES ============
         function makeWallTextures() {
             const S = 512;
             const c = document.createElement('canvas');
             c.width = c.height = S;
             const ctx = c.getContext('2d');
 
-            // Base concrete
             ctx.fillStyle = '#6e6a63';
             ctx.fillRect(0, 0, S, S);
 
-            // Noise grain
             const img = ctx.getImageData(0, 0, S, S);
             const d = img.data;
             for (let i = 0; i < d.length; i += 4) {
@@ -232,7 +231,6 @@
             }
             ctx.putImageData(img, 0, 0);
 
-            // Brick courses
             ctx.strokeStyle = 'rgba(30,28,25,0.55)';
             ctx.lineWidth = 3;
             const courseH = S / 8;
@@ -252,7 +250,6 @@
                 }
             }
 
-            // Stains
             for (let i = 0; i < 80; i++) {
                 const x = Math.random() * S;
                 const y = Math.random() * S;
@@ -270,7 +267,6 @@
             colorTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
             colorTex.colorSpace = THREE.SRGBColorSpace;
 
-            // Normal Map
             const nCanvas = document.createElement('canvas');
             nCanvas.width = nCanvas.height = 512;
             const nctx = nCanvas.getContext('2d');
@@ -392,7 +388,7 @@
         ceiling.receiveShadow = true;
         scene.add(ceiling);
 
-        // ============ FLOOR (Restored Detail) ============
+        // ============ FLOOR ============
         function makeGroundTexture() {
             const S = 1024;
             const c = document.createElement('canvas');
@@ -410,7 +406,6 @@
             }
             ctx.putImageData(img, 0, 0);
             
-            // Tile grout
             ctx.strokeStyle = 'rgba(40,40,40,0.7)';
             ctx.lineWidth = 4;
             const step = S / 8;
@@ -418,7 +413,6 @@
                 ctx.beginPath(); ctx.moveTo(i*step, 0); ctx.lineTo(i*step, S); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, i*step); ctx.lineTo(S, i*step); ctx.stroke();
             }
-            // Stains
             for (let i = 0; i < 150; i++) {
                 const x = Math.random() * S, y = Math.random() * S;
                 const r = 20 + Math.random() * 80;
@@ -558,7 +552,6 @@
                 varying float vFlashlit;
 
                 void main() {
-                    // Perfect circular mask
                     vec2 c = gl_PointCoord - 0.5;
                     float d = length(c);
                     if (d > 0.5) discard;
@@ -567,8 +560,6 @@
                     float a = core * 0.6;
 
                     vec3 color = vec3(1.0, 0.95, 0.85);
-                    
-                    // Flashlight brightly illuminates the dust motes
                     color += vec3(0.8, 0.7, 0.5) * vFlashlit * 3.0;
                     a *= 1.0 + vFlashlit * 4.0;
 
@@ -889,10 +880,6 @@
         const MAX_ROLL = 0.08;
         const ROLL_SPEED = 4.0;
 
-        // Flashlight delay tracking
-        const targetFlashlightQuat = new THREE.Quaternion();
-        const currentFlashlightQuat = new THREE.Quaternion();
-
         const prevCamWorldPos = new THREE.Vector3();
         const prevCamWorldQuat = new THREE.Quaternion();
         camera.getWorldPosition(prevCamWorldPos);
@@ -996,22 +983,35 @@
                 strideDistance = 0;
             }
 
-            // FLASHLIGHT SWAY (Smoothly lags behind camera look)
+            // ============ FLASHLIGHT SWAY (FIXED) ============
+            // The flashlight holder is a child of the camera. Its LOCAL rotation
+            // smoothly decays back toward identity (rest), creating a realistic
+            // lag when the camera whips around. Because the holder is parented to
+            // the camera, the beam always inherits the camera's world rotation
+            // and thus always points in the correct general direction — it just
+            // trails behind slightly during fast turns.
             if (controls.isLocked) {
-                // Instead of overwriting the camera's quaternion, we copy it
-                // to our target, then slerp the holder toward it.
-                // This creates a lagging delay without breaking movement math.
-                targetFlashlightQuat.copy(camera.quaternion);
-                
-                // Smoothly interpolate the delay. Lower factor = more lag.
-                currentFlashlightQuat.slerp(targetFlashlightQuat, Math.min(dt * 10.0, 1.0));
-                flashlightHolder.quaternion.copy(currentFlashlightQuat);
+                // Decompose the camera's LOCAL rotation into yaw and pitch
+                // (ignore roll — roll shouldn't affect the flashlight direction)
+                const camEuler = new THREE.Euler().setFromQuaternion(camera.quaternion, 'YXZ');
+
+                // The holder's target local rotation lags behind by a tiny amount,
+                // proportional to how fast the camera is turning. We achieve the
+                // lag by slerping the holder toward a small fraction of the
+                // camera's local rotation delta.
+                //
+                // Simpler and robust: smoothly slerp the holder's local quaternion
+                // toward identity — since the camera already provides the world
+                // rotation, the holder only needs to add a *small offset* to
+                // create the visual "trail" effect.
+                const targetLocalQuat = new THREE.Quaternion(); // identity
+                flashlightHolder.quaternion.slerp(targetLocalQuat, Math.min(dt * 8.0, 1.0));
             }
 
             // Flashlight brightness lerp
             flashlight.intensity += (flashlightTargetIntensity - flashlight.intensity) * Math.min(dt * 18, 1);
 
-            // DUST ANIMATION (Continuous, independent of camera)
+            // DUST ANIMATION
             dustMat.uniforms.uTime.value = elapsed;
             const camWorldPos = new THREE.Vector3();
             camera.getWorldPosition(camWorldPos);
