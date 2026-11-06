@@ -1,10 +1,7 @@
 // ============================================================
 // NECTAR — app.js
-// Vanilla JS front-end. All data is local for now.
-// TODO: swap these functions for Supabase calls later.
 // ============================================================
 
-// ---- Local state (will become Supabase queries) ----
 let posts = [
   {
     id: 1,
@@ -35,37 +32,46 @@ let posts = [
   },
 ];
 
-// ---- DOM refs ----
 const feedList = document.getElementById("feed-list");
 const postInput = document.getElementById("post-input");
 const postBtn = document.getElementById("post-btn");
 
-// ---- Render ----
 function render() {
   feedList.innerHTML = "";
   posts.forEach((post) => {
     const el = document.createElement("article");
     el.className = "post";
+    
+    // Using SVG icons instead of emojis in the template
     el.innerHTML = `
-      <div class="post-header">
-        <div class="avatar">${post.author[0].toUpperCase()}</div>
-        <div class="post-meta">
-          <div class="name">${escapeHtml(post.author)}</div>
-          <div class="handle">@${escapeHtml(post.handle)} · ${post.time}</div>
+      <div class="avatar">${post.author[0].toUpperCase()}</div>
+      <div class="post-content">
+        <div class="post-header">
+          <div class="post-meta">
+            <span class="name">${escapeHtml(post.author)}</span>
+            <span class="handle">@${escapeHtml(post.handle)} · ${post.time}</span>
+          </div>
         </div>
-      </div>
-      <p class="post-text">${escapeHtml(post.text)}</p>
-      <div class="post-actions">
-        <button data-action="reply">💬 0</button>
-        <button data-action="repost">🔁 0</button>
-        <button data-action="like" class="${post.liked ? "liked" : ""}">
-          ${post.liked ? "❤️" : "🤍"} ${post.likes}
-        </button>
-        <button data-action="share">↗️</button>
+        <p class="post-text">${escapeHtml(post.text)}</p>
+        <div class="post-actions">
+          <button data-action="reply">
+            <i data-lucide="message-circle"></i> 0
+          </button>
+          <button data-action="repost">
+            <i data-lucide="repeat-2"></i> 0
+          </button>
+          <button data-action="like" class="${post.liked ? "liked" : ""}">
+            <i data-lucide="heart"></i> ${post.likes}
+          </button>
+          <button data-action="share">
+            <i data-lucide="share"></i>
+          </button>
+        </div>
       </div>
     `;
 
-    el.querySelector('[data-action="like"]').addEventListener("click", () => {
+    el.querySelector('[data-action="like"]').addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent triggering post click if we add that later
       post.liked = !post.liked;
       post.likes += post.liked ? 1 : -1;
       render();
@@ -73,9 +79,11 @@ function render() {
 
     feedList.appendChild(el);
   });
+  
+  // Re-initialize icons after DOM update
+  lucide.createIcons();
 }
 
-// ---- Add a post ----
 function addPost() {
   const text = postInput.value.trim();
   if (!text) return;
@@ -93,24 +101,19 @@ function addPost() {
   posts.unshift(newPost);
   postInput.value = "";
   render();
-
-  // TODO (Supabase later):
-  // await supabase.from('posts').insert({ content: text })
 }
 
 postBtn.addEventListener("click", addPost);
 
-// Cmd/Ctrl + Enter to submit
 postInput.addEventListener("keydown", (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") addPost();
 });
 
-// ---- Utils ----
 function escapeHtml(str) {
   return str.replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
 }
 
-// ---- Init ----
+// Initial render
 render();
