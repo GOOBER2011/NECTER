@@ -47,6 +47,13 @@
         }
         #flashlightIndicator.visible { display: block; }
         #flashlightIndicator.on { color: #fff6a8; }
+        #blinkOverlay {
+            position: absolute; inset: 0;
+            background-color: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 500;
+        }
         #loading {
             position: absolute; inset: 0; display: flex;
             align-items: center; justify-content: center;
@@ -70,12 +77,13 @@
     <div id="overlay" style="display:none">
         <h1>MAZE</h1>
         <p><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> to move</p>
-        <p><span class="kbd">Shift</span> sprint · <span class="kbd">C</span> crouch · <span class="kbd">F</span> flashlight</p>
+        <p><span class="kbd">Shift</span> sprint · <span class="kbd">C</span> crouch · <span class="kbd">Q</span> close eyes · <span class="kbd">F</span> flashlight</p>
         <p style="margin-top:16px;opacity:0.5">Click anywhere to begin</p>
     </div>
     <div id="crosshair"></div>
-    <div id="hud">WASD · SHIFT sprint · C crouch · F flashlight · ESC release</div>
+    <div id="hud">WASD · SHIFT sprint · C crouch · Q close eyes · F flashlight · ESC release</div>
     <div id="flashlightIndicator">FLASHLIGHT: OFF</div>
+    <div id="blinkOverlay"></div>
     <div id="errorMsg"></div>
 
     <script type="importmap">
@@ -130,14 +138,14 @@
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 0.55;
+        renderer.toneMappingExposure = 0.65; // Increased overall exposure
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         document.body.appendChild(renderer.domElement);
 
         // ============ SCENE ============
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x080808);
-        scene.fog = new THREE.FogExp2(0x080808, 0.04);
+        scene.fog = new THREE.FogExp2(0x080808, 0.035);
 
         // ============ CAMERA RIG ============
         const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.05, 300);
@@ -148,14 +156,15 @@
         scene.add(cameraRig);
 
         // ============ LIGHTING ============
-        const hemi = new THREE.HemisphereLight(0x3a4a5a, 0x1a1510, 0.4);
+        // Brightened ambient light so it's not pitch black
+        const hemi = new THREE.HemisphereLight(0x6a7a8a, 0x3a352a, 0.8);
         scene.add(hemi);
 
         // ============ FLASHLIGHT ============
         const flashlightHolder = new THREE.Object3D();
         camera.add(flashlightHolder);
 
-        const flashlight = new THREE.SpotLight(0xfff2cc, 0, 80, Math.PI / 7, 0.4, 1.0);
+        const flashlight = new THREE.SpotLight(0xfff2cc, 0, 80, Math.PI / 6, 0.4, 1.0);
         flashlight.position.set(0.15, -0.15, 0.1);
         flashlight.target.position.set(0, 0, -10);
         flashlight.distance = 100;
@@ -208,48 +217,6 @@
             carve(0, 0);
         }
         generateMaze();
-
-        // ============ CARVE POCKETS INTO WALLS ============
-        const pockets = [];
-        let pocketsCreated = 0;
-        
-        // Try to place 15 pockets
-        for (let attempts = 0; attempts < 1000 && pocketsCreated < 15; attempts++) {
-            const isHorizontal = Math.random() > 0.5;
-            if (isHorizontal) {
-                const z = Math.floor(Math.random() * (MAZE_H - 1)); 
-                const x = Math.floor(Math.random() * MAZE_W);
-                
-                // We want to carve into the South wall of a cell, pointing North
-                if (wallsH[z + 1][x]) {
-                    if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'H')) {
-                        pockets.push({
-                            axis: 'H', x, z,
-                            wx: cellWorldX(x),
-                            wz: cellWorldZ(z) + CELL_SIZE / 2, // Position of the wall face
-                            dir: -1 // pocket extends backwards into the wall (North)
-                        });
-                        pocketsCreated++;
-                    }
-                }
-            } else {
-                const z = Math.floor(Math.random() * MAZE_H);
-                const x = Math.floor(Math.random() * (MAZE_W - 1));
-                
-                // We want to carve into the East wall of a cell, pointing West
-                if (wallsV[z][x + 1]) {
-                    if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'V')) {
-                        pockets.push({
-                            axis: 'V', x, z,
-                            wx: cellWorldX(x) + CELL_SIZE / 2, // Position of the wall face
-                            wz: cellWorldZ(z),
-                            dir: -1 // pocket extends backwards into the wall (West)
-                        });
-                        pocketsCreated++;
-                    }
-                }
-            }
-        }
 
         // ============ WALL TEXTURES ============
         function makeWallTextures() {
@@ -400,82 +367,6 @@
         instancedWalls.instanceMatrix.needsUpdate = true;
         scene.add(instancedWalls);
 
-        // ============ POCKET GEOMETRY & LANTERNS ============
-        const lanternMat = new THREE.MeshStandardMaterial({ 
-            color: 0x111111, emissive: 0xffaa44, emissiveIntensity: 2.0, roughness: 0.8 
-        });
-
-        for (const pocket of pockets) {
-            const pocketGroup = new THREE.Group();
-            
-            const pocketW = 1.4;
-            const pocketH = 1.2;
-            const pocketD = 1.4; // Depth of the recess
-
-            // The walls of the recess (built to go inward)
-            const wallGeo = new THREE.BoxGeometry(pocketW, pocketH, WALL_THICK);
-            const sideGeo = new THREE.BoxGeometry(WALL_THICK, pocketH, pocketD);
-            const topGeo = new THREE.BoxGeometry(pocketW, WALL_THICK, pocketD);
-            const floorGeo = new THREE.BoxGeometry(pocketW, WALL_THICK, pocketD);
-
-            // Back wall (furthest inside)
-            const back = new THREE.Mesh(wallGeo, wallMat);
-            back.position.set(0, pocketH/2, -pocketD/2);
-            back.castShadow = true;
-            back.receiveShadow = true;
-            pocketGroup.add(back);
-
-            // Left wall
-            const left = new THREE.Mesh(sideGeo, wallMat);
-            left.position.set(-pocketW/2, pocketH/2, -pocketD/4);
-            left.castShadow = true;
-            left.receiveShadow = true;
-            pocketGroup.add(left);
-
-            // Right wall
-            const right = new THREE.Mesh(sideGeo, wallMat);
-            right.position.set(pocketW/2, pocketH/2, -pocketD/4);
-            right.castShadow = true;
-            right.receiveShadow = true;
-            pocketGroup.add(right);
-
-            // Ceiling (Low ceiling forces crouching)
-            const top = new THREE.Mesh(topGeo, wallMat);
-            top.position.set(0, pocketH, -pocketD/4);
-            top.castShadow = true;
-            top.receiveShadow = true;
-            pocketGroup.add(top);
-
-            // Floor of the recess (flush with main floor)
-            const rFloor = new THREE.Mesh(floorGeo, wallMat);
-            rFloor.position.set(0, 0.01, -pocketD/4);
-            rFloor.receiveShadow = true;
-            pocketGroup.add(rFloor);
-
-            // Lantern on the back wall
-            const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.25, 0.15), lanternMat);
-            lantern.position.set(0, pocketH/2, -pocketD/2 + 0.2);
-            pocketGroup.add(lantern);
-
-            // Point Light for the lantern
-            const lanternLight = new THREE.PointLight(0xffaa55, 2.0, 4);
-            lanternLight.position.copy(lantern.position);
-            pocketGroup.add(lanternLight);
-
-            // Position the whole pocket group at the wall face
-            pocketGroup.position.set(pocket.wx, 0, pocket.wz);
-            
-            if (pocket.axis === 'H') {
-                // If H, it extends North (-Z). Opening faces South (+Z).
-                pocketGroup.rotation.y = 0; 
-            } else {
-                // If V, it extends West (-X). Opening faces East (+X).
-                pocketGroup.rotation.y = Math.PI / 2;
-            }
-
-            scene.add(pocketGroup);
-        }
-
         // ============ CEILING ============
         function makeCeilingTexture() {
             const S = 512;
@@ -578,7 +469,7 @@
         // ============ SPAWN PLAYER ============
         cameraRig.position.set(cellWorldX(0), STAND_HEIGHT, cellWorldZ(0));
 
-        // Updated Collision checking for pockets
+        // Standard Collision
         function isInsideWall(x, z, padding = 0.35) {
             const gx = (x / CELL_SIZE) + halfW + 0.5;
             const gz = (z / CELL_SIZE) + halfH + 0.5;
@@ -588,21 +479,6 @@
             const fz = gz - cellZ;
             const padFrac = padding / CELL_SIZE;
 
-            // Check if we are inside a pocket (if so, we are safe from wall collision)
-            for (const p of pockets) {
-                if (p.axis === 'H') {
-                    const px = Math.abs(p.wx - x);
-                    const pz = p.wz - z;
-                    // If within the width and depth of the pocket
-                    if (px < 0.8 && pz > -0.1 && pz < 1.5) return false;
-                } else {
-                    const px = p.wx - x;
-                    const pz = Math.abs(p.wz - z);
-                    if (pz < 0.8 && px > -0.1 && px < 1.5) return false;
-                }
-            }
-
-            // Standard maze walls
             if (fz < padFrac && cellX >= 0 && cellX < MAZE_W && cellZ >= 0 && cellZ <= MAZE_H) {
                 if (wallsH[cellZ] && wallsH[cellZ][cellX]) return true;
             }
@@ -967,6 +843,11 @@
         const hud = document.getElementById('hud');
         const flIndicator = document.getElementById('flashlightIndicator');
         const loading = document.getElementById('loading');
+        const blinkOverlay = document.getElementById('blinkOverlay');
+
+        let isHiding = false; // keeping this variable since it's used in other places, but will always be false
+        let eyesClosed = false;
+        let blinkAnim = 0;
 
         loading.classList.add('hidden');
         overlay.style.display = 'flex';
@@ -999,9 +880,14 @@
             if (!controls.isLocked) return;
             if (e.repeat) return;
             keys.add(e.code);
+            
             if (e.code === 'KeyF') toggleFlashlight();
+            if (e.code === 'KeyQ') eyesClosed = true;
         });
-        document.addEventListener('keyup', (e) => keys.delete(e.code));
+        document.addEventListener('keyup', (e) => {
+            keys.delete(e.code);
+            if (e.code === 'KeyQ') eyesClosed = false;
+        });
         window.addEventListener('blur', () => keys.clear());
 
         function toggleFlashlight() {
@@ -1057,6 +943,11 @@
             requestAnimationFrame(animate);
             const dt = Math.min(clock.getDelta(), 0.05);
             elapsed += dt;
+
+            // BLINK ANIMATION
+            const targetBlink = eyesClosed ? 1.0 : 0.0;
+            blinkAnim += (targetBlink - blinkAnim) * Math.min(dt * 15.0, 1.0);
+            blinkOverlay.style.opacity = blinkAnim;
 
             const crouching = controls.isLocked && (keys.has('KeyC'));
             const targetEyeHeight = crouching ? CROUCH_HEIGHT : STAND_HEIGHT;
