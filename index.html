@@ -3,40 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nectar 🍑</title>
+  <title>Nectar</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍑</text></svg>" />
+  <!-- Load Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-  <!-- ===== SIDEBAR ===== -->
+  <!-- ===== SIDEBAR (TikTok Style) ===== -->
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-icon">🍑</span>
+      <i data-lucide="droplet" class="brand-icon"></i>
       <span class="brand-name">Nectar</span>
     </div>
 
     <nav class="nav">
-      <a href="#" class="nav-item active">🏠 <span>Home</span></a>
-      <a href="#" class="nav-item">🔍 <span>Explore</span></a>
-      <a href="#" class="nav-item">🔔 <span>Notifications</span></a>
-      <a href="#" class="nav-item">👤 <span>Profile</span></a>
-      <a href="#" class="nav-item">⚙️ <span>Settings</span></a>
+      <a href="#" class="nav-item active">
+        <i data-lucide="home"></i> <span>For You</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i data-lucide="compass"></i> <span>Explore</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i data-lucide="users"></i> <span>Following</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i data-lucide="bell"></i> <span>Inbox</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i data-lucide="user"></i> <span>Profile</span>
+      </a>
     </nav>
 
-    <button class="btn-primary sidebar-cta">Drop a Nectar</button>
+    <button class="btn-primary sidebar-cta">
+      <i data-lucide="plus"></i> Drop a Nectar
+    </button>
   </aside>
 
   <!-- ===== MAIN FEED ===== -->
   <main class="feed">
-    <h1 class="page-title">Home</h1>
+    <div class="feed-header">
+      <h1 class="page-title">For You</h1>
+    </div>
 
     <!-- Composer -->
     <section class="composer">
-      <textarea id="post-input" placeholder="What's sweet today?" rows="3"></textarea>
+      <div class="composer-top">
+        <div class="avatar">Y</div>
+        <textarea id="post-input" placeholder="What's sweet today?" rows="2"></textarea>
+      </div>
       <div class="composer-actions">
-        <div class="composer-icons">🖼️ 😊</div>
-        <button id="post-btn" class="btn-primary">Drop 🍑</button>
+        <div class="composer-icons">
+          <button class="icon-btn"><i data-lucide="image"></i></button>
+          <button class="icon-btn"><i data-lucide="smile"></i></button>
+        </div>
+        <button id="post-btn" class="btn-primary">
+          Drop <i data-lucide="send"></i>
+        </button>
       </div>
     </section>
 
@@ -45,5 +69,9 @@
   </main>
 
   <script src="app.js"></script>
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+  </script>
 </body>
 </html>
