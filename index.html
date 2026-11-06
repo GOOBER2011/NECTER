@@ -217,14 +217,12 @@
         for (let attempts = 0; attempts < 1000 && pocketsCreated < 15; attempts++) {
             const isHorizontal = Math.random() > 0.5;
             if (isHorizontal) {
-                const z = Math.floor(Math.random() * MAZE_H); // 0 to MAZE_H - 1
+                const z = Math.floor(Math.random() * (MAZE_H - 1)); 
                 const x = Math.floor(Math.random() * MAZE_W);
                 
                 // We want to carve into the South wall of a cell, pointing North
                 if (wallsH[z + 1][x]) {
                     if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'H')) {
-                        // Remove the wall segment
-                        wallsH[z + 1][x] = false;
                         pockets.push({
                             axis: 'H', x, z,
                             wx: cellWorldX(x),
@@ -236,12 +234,11 @@
                 }
             } else {
                 const z = Math.floor(Math.random() * MAZE_H);
-                const x = Math.floor(Math.random() * MAZE_W);
+                const x = Math.floor(Math.random() * (MAZE_W - 1));
                 
                 // We want to carve into the East wall of a cell, pointing West
                 if (wallsV[z][x + 1]) {
                     if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'V')) {
-                        wallsV[z][x + 1] = false;
                         pockets.push({
                             axis: 'V', x, z,
                             wx: cellWorldX(x) + CELL_SIZE / 2, // Position of the wall face
