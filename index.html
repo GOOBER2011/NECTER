@@ -70,11 +70,11 @@
     <div id="overlay" style="display:none">
         <h1>MAZE</h1>
         <p><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> to move</p>
-        <p><span class="kbd">Shift</span> sprint · <span class="kbd">Ctrl</span> crouch · <span class="kbd">F</span> flashlight</p>
+        <p><span class="kbd">Shift</span> sprint · <span class="kbd">C</span> crouch · <span class="kbd">F</span> flashlight</p>
         <p style="margin-top:16px;opacity:0.5">Click anywhere to begin</p>
     </div>
     <div id="crosshair"></div>
-    <div id="hud">WASD · SHIFT sprint · CTRL crouch · F flashlight · ESC release</div>
+    <div id="hud">WASD · SHIFT sprint · C crouch · F flashlight · ESC release</div>
     <div id="flashlightIndicator">FLASHLIGHT: OFF</div>
     <div id="errorMsg"></div>
 
@@ -176,8 +176,6 @@
         for (let z = 0; z <= MAZE_H; z++) wallsH.push(new Array(MAZE_W).fill(true));
         for (let z = 0; z < MAZE_H; z++) wallsV.push(new Array(MAZE_W + 1).fill(true));
 
-        const pockets = [];
-
         function generateMaze() {
             const visited = [];
             for (let z = 0; z < MAZE_H; z++) visited.push(new Array(MAZE_W).fill(false));
@@ -211,39 +209,44 @@
         }
         generateMaze();
 
-        // --- Carve out pockets ---
-        // We iterate through the maze and pick 12 random solid walls to carve a pocket into.
+        // ============ CARVE POCKETS INTO WALLS ============
+        const pockets = [];
         let pocketsCreated = 0;
-        for (let attempts = 0; attempts < 500 && pocketsCreated < 12; attempts++) {
+        
+        // Try to place 15 pockets
+        for (let attempts = 0; attempts < 1000 && pocketsCreated < 15; attempts++) {
             const isHorizontal = Math.random() > 0.5;
             if (isHorizontal) {
-                const z = Math.floor(Math.random() * (MAZE_H + 1));
+                const z = Math.floor(Math.random() * MAZE_H); // 0 to MAZE_H - 1
                 const x = Math.floor(Math.random() * MAZE_W);
-                // Only carve interior walls, don't mess with the exterior
-                if (z > 0 && z < MAZE_H && wallsH[z][x]) {
-                    // Check if we already put a pocket here
+                
+                // We want to carve into the South wall of a cell, pointing North
+                if (wallsH[z + 1][x]) {
                     if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'H')) {
-                        wallsH[z][x] = false; // open the wall
+                        // Remove the wall segment
+                        wallsH[z + 1][x] = false;
                         pockets.push({
-                            axis: 'H', x, z, 
-                            wx: cellWorldX(x), 
-                            wz: cellWorldZ(z - 1) + CELL_SIZE / 2, // position at the wall boundary
-                            dir: 1 // pocket goes North (+Z)
+                            axis: 'H', x, z,
+                            wx: cellWorldX(x),
+                            wz: cellWorldZ(z) + CELL_SIZE / 2, // Position of the wall face
+                            dir: -1 // pocket extends backwards into the wall (North)
                         });
                         pocketsCreated++;
                     }
                 }
             } else {
                 const z = Math.floor(Math.random() * MAZE_H);
-                const x = Math.floor(Math.random() * (MAZE_W + 1));
-                if (x > 0 && x < MAZE_W && wallsV[z][x]) {
+                const x = Math.floor(Math.random() * MAZE_W);
+                
+                // We want to carve into the East wall of a cell, pointing West
+                if (wallsV[z][x + 1]) {
                     if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'V')) {
-                        wallsV[z][x] = false;
+                        wallsV[z][x + 1] = false;
                         pockets.push({
                             axis: 'V', x, z,
-                            wx: cellWorldX(x - 1) + CELL_SIZE / 2,
+                            wx: cellWorldX(x) + CELL_SIZE / 2, // Position of the wall face
                             wz: cellWorldZ(z),
-                            dir: 1 // pocket goes East (+X)
+                            dir: -1 // pocket extends backwards into the wall (West)
                         });
                         pocketsCreated++;
                     }
@@ -408,65 +411,68 @@
         for (const pocket of pockets) {
             const pocketGroup = new THREE.Group();
             
-            // Build the 3 walls and ceiling of the pocket
-            const pocketW = 1.6;
+            const pocketW = 1.4;
             const pocketH = 1.2;
-            const pocketD = 1.6;
+            const pocketD = 1.4; // Depth of the recess
 
-            // The opening is the front; we build the back and sides.
-            // Using a Group makes positioning based on the pocket wall easy.
+            // The walls of the recess (built to go inward)
             const wallGeo = new THREE.BoxGeometry(pocketW, pocketH, WALL_THICK);
             const sideGeo = new THREE.BoxGeometry(WALL_THICK, pocketH, pocketD);
             const topGeo = new THREE.BoxGeometry(pocketW, WALL_THICK, pocketD);
+            const floorGeo = new THREE.BoxGeometry(pocketW, WALL_THICK, pocketD);
 
-            // Back wall
+            // Back wall (furthest inside)
             const back = new THREE.Mesh(wallGeo, wallMat);
-            back.position.set(0, pocketH/2, pocketD/2);
+            back.position.set(0, pocketH/2, -pocketD/2);
             back.castShadow = true;
             back.receiveShadow = true;
             pocketGroup.add(back);
 
             // Left wall
             const left = new THREE.Mesh(sideGeo, wallMat);
-            left.position.set(-pocketW/2, pocketH/2, 0);
+            left.position.set(-pocketW/2, pocketH/2, -pocketD/4);
             left.castShadow = true;
             left.receiveShadow = true;
             pocketGroup.add(left);
 
             // Right wall
             const right = new THREE.Mesh(sideGeo, wallMat);
-            right.position.set(pocketW/2, pocketH/2, 0);
+            right.position.set(pocketW/2, pocketH/2, -pocketD/4);
             right.castShadow = true;
             right.receiveShadow = true;
             pocketGroup.add(right);
 
             // Ceiling (Low ceiling forces crouching)
             const top = new THREE.Mesh(topGeo, wallMat);
-            top.position.set(0, pocketH, 0);
+            top.position.set(0, pocketH, -pocketD/4);
             top.castShadow = true;
             top.receiveShadow = true;
             pocketGroup.add(top);
 
+            // Floor of the recess (flush with main floor)
+            const rFloor = new THREE.Mesh(floorGeo, wallMat);
+            rFloor.position.set(0, 0.01, -pocketD/4);
+            rFloor.receiveShadow = true;
+            pocketGroup.add(rFloor);
+
             // Lantern on the back wall
-            const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.2), lanternMat);
-            lantern.position.set(0, pocketH/2 + 0.2, pocketD/2 - 0.2);
+            const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.25, 0.15), lanternMat);
+            lantern.position.set(0, pocketH/2, -pocketD/2 + 0.2);
             pocketGroup.add(lantern);
 
             // Point Light for the lantern
-            const lanternLight = new THREE.PointLight(0xffaa55, 1.5, 5);
+            const lanternLight = new THREE.PointLight(0xffaa55, 2.0, 4);
             lanternLight.position.copy(lantern.position);
             pocketGroup.add(lanternLight);
 
-            // Position and rotate the whole pocket group
-            // In the H axis, the opening faces North (-Z) or South (+Z).
-            // In the V axis, it faces West (-X) or East (+X).
+            // Position the whole pocket group at the wall face
             pocketGroup.position.set(pocket.wx, 0, pocket.wz);
             
             if (pocket.axis === 'H') {
-                // Opening faces towards +Z, so pocket is built towards -Z
+                // If H, it extends North (-Z). Opening faces South (+Z).
                 pocketGroup.rotation.y = 0; 
             } else {
-                // Opening faces towards +X, so pocket is built towards -X
+                // If V, it extends West (-X). Opening faces East (+X).
                 pocketGroup.rotation.y = Math.PI / 2;
             }
 
@@ -572,27 +578,10 @@
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // ============ BROKEN CEILING LIGHTS ============
-        const lightMat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x111111 });
-        for (let i = 0; i < 10; i++) {
-            const lx = (Math.random() - 0.5) * 60;
-            const lz = (Math.random() - 0.5) * 60;
-            
-            const fixture = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.2), lightMat);
-            fixture.position.set(lx, WALL_HEIGHT - 0.1, lz);
-            scene.add(fixture);
-            
-            if (i % 3 === 0) {
-                const pl = new THREE.PointLight(0xffaa55, 0.2, 4);
-                pl.position.set(lx, WALL_HEIGHT - 0.2, lz);
-                scene.add(pl);
-            }
-        }
-
         // ============ SPAWN PLAYER ============
         cameraRig.position.set(cellWorldX(0), STAND_HEIGHT, cellWorldZ(0));
 
-        // Modified Collision to account for Crouch Height and Pockets
+        // Updated Collision checking for pockets
         function isInsideWall(x, z, padding = 0.35) {
             const gx = (x / CELL_SIZE) + halfW + 0.5;
             const gz = (z / CELL_SIZE) + halfH + 0.5;
@@ -602,22 +591,21 @@
             const fz = gz - cellZ;
             const padFrac = padding / CELL_SIZE;
 
-            // Check if we are in a pocket. If we are inside the pocket area, we can freely move
-            // even if there's a "wall" grid marker. 
-            // The pocket is built into the wall, so we just check if we are deeper than the wall thickness.
+            // Check if we are inside a pocket (if so, we are safe from wall collision)
             for (const p of pockets) {
                 if (p.axis === 'H') {
-                    const px = (p.wx - x);
-                    const pz = (p.wz - z);
-                    if (Math.abs(px) < 0.8 && pz > 0 && pz < 1.6) return false; 
+                    const px = Math.abs(p.wx - x);
+                    const pz = p.wz - z;
+                    // If within the width and depth of the pocket
+                    if (px < 0.8 && pz > -0.1 && pz < 1.5) return false;
                 } else {
-                    const px = (p.wx - x);
-                    const pz = (p.wz - z);
-                    if (Math.abs(pz) < 0.8 && px > 0 && px < 1.6) return false;
+                    const px = p.wx - x;
+                    const pz = Math.abs(p.wz - z);
+                    if (pz < 0.8 && px > -0.1 && px < 1.5) return false;
                 }
             }
 
-            // Check standard walls
+            // Standard maze walls
             if (fz < padFrac && cellX >= 0 && cellX < MAZE_W && cellZ >= 0 && cellZ <= MAZE_H) {
                 if (wallsH[cellZ] && wallsH[cellZ][cellX]) return true;
             }
@@ -1073,7 +1061,7 @@
             const dt = Math.min(clock.getDelta(), 0.05);
             elapsed += dt;
 
-            const crouching = controls.isLocked && (keys.has('ControlLeft') || keys.has('ControlRight'));
+            const crouching = controls.isLocked && (keys.has('KeyC'));
             const targetEyeHeight = crouching ? CROUCH_HEIGHT : STAND_HEIGHT;
             eyeHeight += (targetEyeHeight - eyeHeight) * Math.min(dt * 12, 1);
 
