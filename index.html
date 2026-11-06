@@ -218,7 +218,7 @@
         }
         generateMaze();
 
-        // ============ WALL TEXTURES (Added Grime & Moss) ============
+        // ============ WALL TEXTURES ============
         function makeWallTextures() {
             const S = 512;
             const c = document.createElement('canvas');
@@ -236,7 +236,6 @@
             }
             ctx.putImageData(img, 0, 0);
 
-            // Brick courses
             ctx.strokeStyle = 'rgba(30,28,25,0.55)';
             ctx.lineWidth = 3;
             const courseH = S / 8;
@@ -255,14 +254,12 @@
                 }
             }
 
-            // Dirt/grime on lower half
             const grimeGrad = ctx.createLinearGradient(0, S, 0, S/2);
             grimeGrad.addColorStop(0, 'rgba(20,30,20,0.4)');
             grimeGrad.addColorStop(1, 'rgba(20,30,20,0)');
             ctx.fillStyle = grimeGrad;
             ctx.fillRect(0, 0, S, S);
 
-            // Moss patches near the bottom
             for (let i = 0; i < 40; i++) {
                 const x = Math.random() * S;
                 const y = S * 0.7 + Math.random() * S * 0.3;
@@ -274,7 +271,6 @@
                 ctx.fillRect(x - r, y - r, r * 2, r * 2);
             }
 
-            // Dark stains
             for (let i = 0; i < 80; i++) {
                 const x = Math.random() * S;
                 const y = Math.random() * S;
@@ -415,8 +411,6 @@
         const pipeMat = new THREE.MeshStandardMaterial({ color: 0x4a3b2e, roughness: 0.7, metalness: 0.6 });
         const pipeGeo = new THREE.CylinderGeometry(0.08, 0.08, 100, 8);
         pipeGeo.rotateZ(Math.PI / 2);
-        
-        // Add a few long pipes running across the ceiling
         for (let i = 0; i < 4; i++) {
             const pipe = new THREE.Mesh(pipeGeo, pipeMat);
             pipe.position.set(0, WALL_HEIGHT - 0.2, -30 + i * 20);
@@ -472,86 +466,102 @@
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // ============ LOCKERS ============
+        // ============ BIGGER LOCKERS (with cut-out vents) ============
         const lockers = [];
-        const lockerGeo = new THREE.BoxGeometry(0.8, 2.0, 0.5);
-        const lockerDoorGeo = new THREE.BoxGeometry(0.76, 1.96, 0.05);
-        const lockerMat = new THREE.MeshStandardMaterial({ color: 0x2a3a3a, roughness: 0.6, metalness: 0.5 });
-        const ventMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
         
-        // Create a locker texture (metallic with vents)
-        function makeLockerDoorTexture() {
-            const c = document.createElement('canvas');
-            c.width = 128; c.height = 256;
-            const ctx = c.getContext('2d');
-            // Base metal
-            ctx.fillStyle = '#2a3a3a';
-            ctx.fillRect(0, 0, 128, 256);
-            // Vents at top
-            ctx.fillStyle = '#0a0a0a';
-            for (let i = 0; i < 5; i++) {
-                ctx.fillRect(20, 30 + i * 12, 88, 6);
-            }
-            // Vents at bottom
-            for (let i = 0; i < 5; i++) {
-                ctx.fillRect(20, 180 + i * 12, 88, 6);
-            }
-            // Scratches/rust
-            for (let i = 0; i < 50; i++) {
-                ctx.fillStyle = `rgba(80,40,20,${Math.random() * 0.3})`;
-                ctx.fillRect(Math.random() * 128, Math.random() * 256, Math.random() * 20, Math.random() * 2);
-            }
-            const tex = new THREE.CanvasTexture(c);
-            tex.colorSpace = THREE.SRGBColorSpace;
-            return tex;
-        }
-        
-        const lockerDoorMat = new THREE.MeshStandardMaterial({ 
-            map: makeLockerDoorTexture(), color: 0xffffff, roughness: 0.5, metalness: 0.6 
-        });
+        // Dimensions
+        const LOCKER_W = 1.2;
+        const LOCKER_H = 2.6;
+        const LOCKER_D = 0.8;
 
-        // Spawn lockers in empty cell corners
+        const lockerBodyGeo = new THREE.BoxGeometry(LOCKER_W, LOCKER_H, LOCKER_D);
+        const lockerMat = new THREE.MeshStandardMaterial({ color: 0x2a3a3a, roughness: 0.6, metalness: 0.5 });
+        
+        // Create a custom door geometry with actual holes for the vents
+        function createLockerDoorGeometry() {
+            const doorW = LOCKER_W - 0.05;
+            const doorH = LOCKER_H - 0.05;
+            const doorD = 0.05;
+            
+            // We'll build the door out of several boxes to create the slat gaps
+            const doorGroup = new THREE.Group();
+            const slatMat = new THREE.MeshStandardMaterial({ 
+                color: 0x2a3a3a, roughness: 0.5, metalness: 0.6, side: THREE.DoubleSide 
+            });
+
+            // Top solid section
+            const topSolid = new THREE.Mesh(new THREE.BoxGeometry(doorW, 0.5, doorD), slatMat);
+            topSolid.position.y = doorH/2 - 0.25;
+            doorGroup.add(topSolid);
+
+            // Slats section (top vents)
+            const slatHeight = 0.08;
+            const slatGap = 0.06;
+            for (let i = 0; i < 4; i++) {
+                const slat = new THREE.Mesh(new THREE.BoxGeometry(doorW, slatHeight, doorD), slatMat);
+                slat.position.y = doorH/2 - 0.55 - i * (slatHeight + slatGap);
+                doorGroup.add(slat);
+            }
+
+            // Middle solid section (where the lock/handle is)
+            const midSolid = new THREE.Mesh(new THREE.BoxGeometry(doorW, 1.0, doorD), slatMat);
+            midSolid.position.y = 0.1;
+            doorGroup.add(midSolid);
+
+            // Bottom slats
+            for (let i = 0; i < 4; i++) {
+                const slat = new THREE.Mesh(new THREE.BoxGeometry(doorW, slatHeight, doorD), slatMat);
+                slat.position.y = -0.5 - i * (slatHeight + slatGap);
+                doorGroup.add(slat);
+            }
+
+            // Bottom solid
+            const botSolid = new THREE.Mesh(new THREE.BoxGeometry(doorW, 0.3, doorD), slatMat);
+            botSolid.position.y = -doorH/2 + 0.15;
+            doorGroup.add(botSolid);
+
+            return doorGroup;
+        }
+
+        // Spawn lockers
         for (let z = 0; z < MAZE_H; z++) {
             for (let x = 0; x < MAZE_W; x++) {
-                // 15% chance to place a locker in a cell
                 if (Math.random() < 0.15) {
-                    // Find an open wall side to place it against
                     const cx = cellWorldX(x);
                     const cz = cellWorldZ(z);
                     
-                    // Place against the North wall if it exists, otherwise South, etc.
                     let lx = cx, lz = cz, rotY = 0;
                     
-                    if (wallsH[z][x]) { lz = cz - CELL_SIZE/2 + 0.3; rotY = 0; }
-                    else if (wallsH[z+1][x]) { lz = cz + CELL_SIZE/2 - 0.3; rotY = Math.PI; }
-                    else if (wallsV[z][x]) { lx = cx - CELL_SIZE/2 + 0.3; rotY = Math.PI/2; }
-                    else if (wallsV[z][x+1]) { lx = cx + CELL_SIZE/2 - 0.3; rotY = -Math.PI/2; }
-                    else continue; // skip if no wall
+                    if (wallsH[z][x]) { lz = cz - CELL_SIZE/2 + LOCKER_D/2 + 0.1; rotY = 0; }
+                    else if (wallsH[z+1][x]) { lz = cz + CELL_SIZE/2 - LOCKER_D/2 - 0.1; rotY = Math.PI; }
+                    else if (wallsV[z][x]) { lx = cx - CELL_SIZE/2 + LOCKER_D/2 + 0.1; rotY = Math.PI/2; }
+                    else if (wallsV[z][x+1]) { lx = cx + CELL_SIZE/2 - LOCKER_D/2 - 0.1; rotY = -Math.PI/2; }
+                    else continue;
 
                     const lockerGroup = new THREE.Group();
                     
-                    const body = new THREE.Mesh(lockerGeo, lockerMat);
+                    const body = new THREE.Mesh(lockerBodyGeo, lockerMat);
                     body.castShadow = true;
                     body.receiveShadow = true;
                     lockerGroup.add(body);
 
-                    const door = new THREE.Mesh(lockerDoorGeo, lockerDoorMat);
-                    door.position.set(0, 0, 0.28);
+                    const door = createLockerDoorGeometry();
+                    door.position.set(0, 0, LOCKER_D/2 + 0.01);
                     door.castShadow = true;
                     lockerGroup.add(door);
 
                     // Handle
-                    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.1, 0.04), ventMat);
-                    handle.position.set(0.3, 0, 0.31);
+                    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.2, 0.04), new THREE.MeshStandardMaterial({color: 0x888888, metalness: 0.9, roughness: 0.2}));
+                    handle.position.set(doorW/2 - 0.1, 0.1, LOCKER_D/2 + 0.08);
                     lockerGroup.add(handle);
 
-                    lockerGroup.position.set(lx, 1.0, lz);
+                    lockerGroup.position.set(lx, LOCKER_H/2, lz);
                     lockerGroup.rotation.y = rotY;
                     scene.add(lockerGroup);
 
                     lockers.push({
                         group: lockerGroup,
-                        pos: new THREE.Vector3(lx, 1.0, lz),
+                        pos: new THREE.Vector3(lx, LOCKER_H/2, lz),
                         rotY: rotY,
                         occupied: false
                     });
@@ -559,7 +569,7 @@
             }
         }
 
-        // ============ BROKEN CEILING LIGHTS (Detail) ============
+        // ============ BROKEN CEILING LIGHTS ============
         const lightMat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x111111 });
         for (let i = 0; i < 10; i++) {
             const lx = (Math.random() - 0.5) * 60;
@@ -569,7 +579,6 @@
             fixture.position.set(lx, WALL_HEIGHT - 0.1, lz);
             scene.add(fixture);
             
-            // Add a tiny faint point light to a few of them
             if (i % 3 === 0) {
                 const pl = new THREE.PointLight(0xffaa55, 0.2, 4);
                 pl.position.set(lx, WALL_HEIGHT - 0.2, lz);
@@ -982,7 +991,6 @@
             keys.clear();
             stopCurrentFootstep();
             if (isHiding && nearLocker) {
-                // Force exit hiding if we unlock
                 isHiding = false;
                 nearLocker.occupied = false;
             }
@@ -1024,20 +1032,16 @@
             nearLocker = locker;
             locker.occupied = true;
             
-            // Move camera inside locker (slightly forward from locker center)
-            const insideOffset = new THREE.Vector3(0, 0, 0.1); // Slightly inside
-            const lockerWorldPos = locker.pos.clone();
+            // Move camera inside the locker, right up against the door.
+            // The door is on the +Z side (local) of the locker.
+            // We want the eye about 0.15 units inside from the door face.
+            const localOffset = new THREE.Vector3(0, 0, LOCKER_D/2 - 0.15);
+            localOffset.applyEuler(new THREE.Euler(0, locker.rotY, 0));
             
-            // Convert local offset to world space using locker rotation
-            insideOffset.applyEuler(new THREE.Euler(0, locker.rotY, 0));
-            const targetPos = lockerWorldPos.clone().add(insideOffset);
+            const targetPos = locker.pos.clone().add(localOffset);
             
-            // Set the rig position
-            cameraRig.position.set(targetPos.x, STAND_HEIGHT - 0.2, targetPos.z);
-            
-            // Face outward (opposite of locker's forward)
-            // The camera's rotation is handled by PointerLockControls, we just reset it
-            // We'll let the player look around freely from inside.
+            // Set the rig position, lower eye height slightly since lockers are tall
+            cameraRig.position.set(targetPos.x, STAND_HEIGHT - 0.1, targetPos.z);
             
             interactPrompt.textContent = '[E] Exit';
             interactPrompt.classList.add('visible');
@@ -1048,7 +1052,7 @@
             
             // Step out in front of the locker
             const forward = new THREE.Vector3(0, 0, 1).applyEuler(new THREE.Euler(0, nearLocker.rotY, 0));
-            const exitPos = nearLocker.pos.clone().add(forward.multiplyScalar(1.0));
+            const exitPos = nearLocker.pos.clone().add(forward.multiplyScalar(1.2));
             
             cameraRig.position.set(exitPos.x, STAND_HEIGHT, exitPos.z);
             
@@ -1060,10 +1064,10 @@
         }
 
         function checkLockerProximity() {
-            if (isHiding) return; // handled elsewhere
+            if (isHiding) return;
             
             let closest = null;
-            let minDist = 1.8; // Interaction range
+            let minDist = 2.0;
             
             for (const locker of lockers) {
                 if (locker.occupied) continue;
@@ -1210,10 +1214,8 @@
                 if (horizSpeed < 0.2) strideDistance = Math.min(strideDistance, strideLen * 0.5);
 
             } else if (isHiding) {
-                // Lock position while hiding
                 velocity.set(0, 0, 0);
                 cameraRig.rotation.z = 0;
-                // Don't bob while hiding
             } else {
                 velocity.set(0, 0, 0);
                 currentRoll += (0 - currentRoll) * Math.min(dt * 6, 1);
