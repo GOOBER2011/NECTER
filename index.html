@@ -89,7 +89,7 @@
 
     <script type="module">
         // ============================================================
-        // GLOBAL ERROR HANDLER — show errors instead of hanging
+        // GLOBAL ERROR HANDLER
         // ============================================================
         window.addEventListener('error', (e) => {
             const err = document.getElementById('errorMsg');
@@ -118,7 +118,7 @@
         import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
         // ============================================================
-        // MAZE CONSTANTS — defined FIRST before anything uses them
+        // CONSTANTS
         // ============================================================
         const MAZE_W = 15;
         const MAZE_H = 15;
@@ -159,20 +159,16 @@
         cameraRig.add(camera);
         scene.add(cameraRig);
 
-        // ============ LIGHTING ============
-        const hemi = new THREE.HemisphereLight(0x3a4a5a, 0x1a1510, 0.35);
+        // ============ LIGHTING (Optimized) ============
+        // Removed the 40 point lights that were killing FPS.
+        // Replaced with a low ambient + a single weak directional to keep the
+        // walls readable even when the flashlight is off.
+        const hemi = new THREE.HemisphereLight(0x3a4a5a, 0x1a1510, 0.45);
         scene.add(hemi);
 
-        // Weak overhead lights scattered around the maze
-        for (let i = 0; i < 40; i++) {
-            const l = new THREE.PointLight(0xffe8b0, 0.35, 12, 2.0);
-            l.position.set(
-                (Math.random() - 0.5) * 80,
-                WALL_HEIGHT - 0.5,
-                (Math.random() - 0.5) * 80
-            );
-            scene.add(l);
-        }
+        const dirLight = new THREE.DirectionalLight(0x556677, 0.25);
+        dirLight.position.set(0, 10, 0);
+        scene.add(dirLight);
 
         // ============ FLASHLIGHT ============
         const flashlight = new THREE.SpotLight(0xfff2cc, 0, 40, Math.PI / 7, 0.45, 1.4);
@@ -289,62 +285,18 @@
                 ctx.fillRect(x - r, y - r, r * 2, r * 2);
             }
 
-            ctx.strokeStyle = 'rgba(20,18,15,0.25)';
-            for (let i = 0; i < 12; i++) {
-                const x = Math.random() * S;
-                ctx.lineWidth = 1 + Math.random() * 2;
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x + (Math.random() - 0.5) * 20, S * (0.3 + Math.random() * 0.6));
-                ctx.stroke();
-            }
-
             const colorTex = new THREE.CanvasTexture(c);
             colorTex.wrapS = colorTex.wrapT = THREE.RepeatWrapping;
             colorTex.repeat.set(1, 1);
             colorTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
             colorTex.colorSpace = THREE.SRGBColorSpace;
 
-            const nCanvas = document.createElement('canvas');
-            nCanvas.width = nCanvas.height = 512;
-            const nctx = nCanvas.getContext('2d');
-            nctx.fillStyle = '#8080ff';
-            nctx.fillRect(0, 0, 512, 512);
-            nctx.strokeStyle = 'rgba(90,90,255,1)';
-            nctx.lineWidth = 4;
-            for (let i = 0; i <= 8; i++) {
-                const y = i * (512 / 8);
-                nctx.beginPath();
-                nctx.moveTo(0, y);
-                nctx.lineTo(512, y);
-                nctx.stroke();
-            }
-            nctx.strokeStyle = 'rgba(110,110,255,1)';
-            nctx.lineWidth = 3;
-            for (let row = 0; row < 8; row++) {
-                const y = row * (512 / 8);
-                const offset = (row % 2) * (512 / 12);
-                for (let i = 0; i < 6; i++) {
-                    const x = i * (512 / 6) + offset;
-                    nctx.beginPath();
-                    nctx.moveTo(x, y);
-                    nctx.lineTo(x, y + 512 / 8);
-                    nctx.stroke();
-                }
-            }
-            const normalTex = new THREE.CanvasTexture(nCanvas);
-            normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
-            normalTex.repeat.set(1, 1);
-            normalTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-
-            return { colorTex, normalTex };
+            return { colorTex };
         }
 
         const wallTextures = makeWallTextures();
         const wallMat = new THREE.MeshStandardMaterial({
             map: wallTextures.colorTex,
-            normalMap: wallTextures.normalTex,
-            normalScale: new THREE.Vector2(1.2, 1.2),
             color: 0x9a948a,
             roughness: 0.92,
             metalness: 0.03,
@@ -430,17 +382,6 @@
                 ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(S, p); ctx.stroke();
             }
 
-            for (let i = 0; i < 60; i++) {
-                const x = Math.random() * S;
-                const y = Math.random() * S;
-                const r = 8 + Math.random() * 50;
-                const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-                g.addColorStop(0, `rgba(20,18,15,${0.05 + Math.random() * 0.08})`);
-                g.addColorStop(1, 'rgba(20,18,15,0)');
-                ctx.fillStyle = g;
-                ctx.fillRect(x - r, y - r, r * 2, r * 2);
-            }
-
             const tex = new THREE.CanvasTexture(c);
             tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
             tex.repeat.set((MAZE_W * CELL_SIZE) / 5, (MAZE_H * CELL_SIZE) / 5);
@@ -454,7 +395,6 @@
             color: 0x5a5753,
             roughness: 0.95,
             metalness: 0.02,
-            envMapIntensity: 0.15,
             side: THREE.DoubleSide
         });
         const ceilingGeo = new THREE.PlaneGeometry(MAZE_W * CELL_SIZE + 4, MAZE_H * CELL_SIZE + 4);
@@ -484,18 +424,6 @@
             }
             ctx.putImageData(img, 0, 0);
 
-            for (let i = 0; i < 200; i++) {
-                const x = Math.random() * S, y = Math.random() * S;
-                const r = 20 + Math.random() * 100;
-                const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-                const shade = Math.random() > 0.55 ? 255 : 0;
-                const a = 0.02 + Math.random() * 0.035;
-                g.addColorStop(0, `rgba(${shade},${shade},${shade},${a})`);
-                g.addColorStop(1, `rgba(${shade},${shade},${shade},0)`);
-                ctx.fillStyle = g;
-                ctx.fillRect(x - r, y - r, r * 2, r * 2);
-            }
-
             ctx.strokeStyle = 'rgba(50,50,50,0.6)';
             ctx.lineWidth = 3;
             const step = S / 8;
@@ -511,41 +439,7 @@
             colorTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
             colorTex.colorSpace = THREE.SRGBColorSpace;
 
-            const rc = document.createElement('canvas');
-            rc.width = rc.height = S;
-            const rctx = rc.getContext('2d');
-            rctx.fillStyle = '#a0a0a0';
-            rctx.fillRect(0, 0, S, S);
-            rctx.strokeStyle = '#e0e0e0';
-            rctx.lineWidth = 3;
-            for (let i = 0; i <= 8; i++) {
-                const p = i * step;
-                rctx.beginPath(); rctx.moveTo(p, 0); rctx.lineTo(p, S); rctx.stroke();
-                rctx.beginPath(); rctx.moveTo(0, p); rctx.lineTo(S, p); rctx.stroke();
-            }
-            const roughTex = new THREE.CanvasTexture(rc);
-            roughTex.wrapS = roughTex.wrapT = THREE.RepeatWrapping;
-            roughTex.repeat.set(25, 25);
-            roughTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-
-            const nCanvas = document.createElement('canvas');
-            nCanvas.width = nCanvas.height = S;
-            const nctx = nCanvas.getContext('2d');
-            nctx.fillStyle = '#8080ff';
-            nctx.fillRect(0, 0, S, S);
-            nctx.strokeStyle = 'rgba(100,100,255,1)';
-            nctx.lineWidth = 4;
-            for (let i = 0; i <= 8; i++) {
-                const p = i * step;
-                nctx.beginPath(); nctx.moveTo(p, 0); nctx.lineTo(p, S); nctx.stroke();
-                nctx.beginPath(); nctx.moveTo(0, p); nctx.lineTo(S, p); nctx.stroke();
-            }
-            const normalTex = new THREE.CanvasTexture(nCanvas);
-            normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
-            normalTex.repeat.set(25, 25);
-            normalTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-
-            return { colorTex, roughTex, normalTex };
+            return { colorTex };
         }
 
         const SIZE = 200;
@@ -553,9 +447,6 @@
         const groundGeo = new THREE.PlaneGeometry(SIZE, SIZE, 64, 64);
         const groundMat = new THREE.MeshStandardMaterial({
             map: groundTextures.colorTex,
-            roughnessMap: groundTextures.roughTex,
-            normalMap: groundTextures.normalTex,
-            normalScale: new THREE.Vector2(0.8, 0.8),
             color: 0x808080,
             roughness: 1.0,
             metalness: 0.05,
@@ -613,112 +504,55 @@
             return false;
         }
 
-        // ============ DUST PARTICLES ============
-        const dustCount = 8000;
-        const dustGeo = new THREE.BufferGeometry();
-        const dustPositions = new Float32Array(dustCount * 3);
-        const dustSizes = new Float32Array(dustCount);
-        const dustPhases = new Float32Array(dustCount);
-        const dustDriftSpeeds = new Float32Array(dustCount);
-
-        const DUST_RANGE_XZ = 40;
-        const DUST_RANGE_Y = 3.0;
-
-        for (let i = 0; i < dustCount; i++) {
-            const yBias = Math.pow(Math.random(), 2.0);
-            dustPositions[i * 3]     = (Math.random() - 0.5) * DUST_RANGE_XZ * 2;
-            dustPositions[i * 3 + 1] = yBias * DUST_RANGE_Y + 0.1;
-            dustPositions[i * 3 + 2] = (Math.random() - 0.5) * DUST_RANGE_XZ * 2;
-            dustSizes[i] = 0.012 + Math.random() * 0.09;
-            dustPhases[i] = Math.random() * Math.PI * 2;
-            dustDriftSpeeds[i] = 0.15 + Math.random() * 0.5;
-        }
-
-        dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-        dustGeo.setAttribute('aSize', new THREE.BufferAttribute(dustSizes, 1));
-        dustGeo.setAttribute('aPhase', new THREE.BufferAttribute(dustPhases, 1));
-        dustGeo.setAttribute('aDriftSpeed', new THREE.BufferAttribute(dustDriftSpeeds, 1));
-
-        const dustMat = new THREE.ShaderMaterial({
+        // ============ OPTIMIZED DUST PARTICLES ============
+        // We use InstancedMesh with tiny planes instead of thousands of points.
+        // Points with variable sizes can be slow on some GPUs. InstancedMesh
+        // with a single material and texture is highly optimized.
+        const DUST_COUNT = 2500; // Reduced count for performance
+        const dustGeo = new THREE.PlaneGeometry(0.08, 0.08);
+        const dustMat = new THREE.MeshBasicMaterial({
+            color: 0xfff8e7,
             transparent: true,
+            opacity: 0.4,
             depthWrite: false,
             blending: THREE.AdditiveBlending,
-            uniforms: {
-                uTime: { value: 0 },
-                uCamPos: { value: new THREE.Vector3() },
-                uPixelRatio: { value: renderer.getPixelRatio() },
-                uFlashlightPos: { value: new THREE.Vector3() },
-                uFlashlightDir: { value: new THREE.Vector3(0, 0, -1) },
-                uFlashlightOn: { value: 0 }
-            },
-            vertexShader: `
-                attribute float aSize;
-                attribute float aPhase;
-                attribute float aDriftSpeed;
-                uniform float uTime;
-                uniform vec3 uCamPos;
-                uniform float uPixelRatio;
-                uniform vec3 uFlashlightPos;
-                uniform vec3 uFlashlightDir;
-                uniform float uFlashlightOn;
-                varying float vAlpha;
-                varying float vFlashlit;
-
-                void main() {
-                    vec3 pos = position;
-                    float t = uTime * aDriftSpeed;
-
-                    pos.x += sin(t * 0.41 + aPhase) * 0.8 + sin(t * 1.3 + aPhase * 2.1) * 0.15;
-                    pos.z += cos(t * 0.37 + aPhase * 1.3) * 0.8 + cos(t * 1.1 + aPhase * 0.7) * 0.15;
-                    pos.y += sin(t * 0.29 + aPhase * 0.5) * 0.35;
-
-                    vec3 toCam = uCamPos - pos;
-                    float wrapR = 40.0;
-                    toCam.x = mod(toCam.x + wrapR, wrapR * 2.0) - wrapR;
-                    toCam.z = mod(toCam.z + wrapR, wrapR * 2.0) - wrapR;
-                    vec3 worldPos = uCamPos + toCam;
-                    worldPos.y = mod(pos.y, 3.0) + 0.1;
-
-                    float twinkle = 0.6 + 0.4 * sin(t * 2.3 + aPhase * 5.1);
-
-                    vec3 toParticle = normalize(worldPos - uFlashlightPos);
-                    float cosAngle = dot(toParticle, normalize(uFlashlightDir));
-                    float inCone = smoothstep(0.85, 1.0, cosAngle);
-                    float distF = smoothstep(20.0, 2.0, length(worldPos - uFlashlightPos));
-                    vFlashlit = uFlashlightOn * inCone * distF;
-
-                    vec4 mvPosition = viewMatrix * vec4(worldPos, 1.0);
-                    gl_Position = projectionMatrix * mvPosition;
-
-                    float dist = length(mvPosition.xyz);
-                    gl_PointSize = aSize * uPixelRatio * (400.0 / max(dist, 0.5));
-                    gl_PointSize = min(gl_PointSize, 20.0 * uPixelRatio);
-
-                    vAlpha = smoothstep(45.0, 6.0, dist) * smoothstep(0.0, 1.0, dist) * twinkle;
-                }`,
-            fragmentShader: `
-                varying float vAlpha;
-                varying float vFlashlit;
-
-                void main() {
-                    vec2 c = gl_PointCoord - 0.5;
-                    float d = length(c);
-                    if (d > 0.5) discard;
-
-                    float core = smoothstep(0.5, 0.0, d);
-                    float a = core * 0.45;
-
-                    vec3 color = vec3(1.0, 0.96, 0.88);
-                    color += vec3(0.6, 0.55, 0.4) * vFlashlit * 1.2;
-                    a *= 1.0 + vFlashlit * 2.0;
-
-                    gl_FragColor = vec4(color, a * vAlpha);
-                }`
+            side: THREE.DoubleSide
         });
 
-        const dustPoints = new THREE.Points(dustGeo, dustMat);
-        dustPoints.frustumCulled = false;
-        scene.add(dustPoints);
+        const dustParticles = new THREE.InstancedMesh(dustGeo, dustMat, DUST_COUNT);
+        dustParticles.frustumCulled = false;
+
+        // Store data for animation
+        const dustData = [];
+        const dummy = new THREE.Object3D();
+
+        const DUST_RANGE_XZ = 30;
+        const DUST_RANGE_Y = 3.0;
+
+        for (let i = 0; i < DUST_COUNT; i++) {
+            // Bias particles lower to the ground
+            const yBias = Math.pow(Math.random(), 2.0);
+            const x = (Math.random() - 0.5) * DUST_RANGE_XZ * 2;
+            const y = yBias * DUST_RANGE_Y + 0.1;
+            const z = (Math.random() - 0.5) * DUST_RANGE_XZ * 2;
+            
+            dustData.push({
+                baseX: x,
+                baseY: y,
+                baseZ: z,
+                speed: 0.15 + Math.random() * 0.5,
+                phase: Math.random() * Math.PI * 2,
+                size: 0.5 + Math.random() * 0.5
+            });
+
+            // Initial dummy position (will be updated every frame)
+            dummy.position.set(x, y, z);
+            dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+            dummy.scale.setScalar(dustData[i].size);
+            dummy.updateMatrix();
+            dustParticles.setMatrixAt(i, dummy.matrix);
+        }
+        scene.add(dustParticles);
 
         // ============ AUDIO SYSTEM ============
         let audioCtx = null;
@@ -828,15 +662,6 @@
                         const t = i / sr;
                         const decay = Math.exp(-t * 30) * (ch === 0 ? 0.9 : 0.75);
                         d[i] = (Math.random() * 2 - 1) * decay;
-                    }
-                    const taps = [
-                        { at: 0.007, amp: 0.45 },
-                        { at: 0.016, amp: 0.32 },
-                        { at: 0.028, amp: 0.22 }
-                    ];
-                    for (const tap of taps) {
-                        const idx = Math.floor(tap.at * sr);
-                        if (idx < len) d[idx] += tap.amp * (Math.random() * 0.5 + 0.5) * (ch === 0 ? 1 : 0.7);
                     }
                 }
                 footstepReverb = audioCtx.createConvolver();
@@ -1008,7 +833,6 @@
         const flIndicator = document.getElementById('flashlightIndicator');
         const loading = document.getElementById('loading');
 
-        // Hide loading now that scene is set up
         loading.classList.add('hidden');
         overlay.style.display = 'flex';
 
@@ -1056,7 +880,6 @@
             playFlashlightClick();
             flIndicator.textContent = flashlightOn ? 'FLASHLIGHT: ON' : 'FLASHLIGHT: OFF';
             flIndicator.classList.toggle('on', flashlightOn);
-            dustMat.uniforms.uFlashlightOn.value = flashlightOn ? 1.0 : 0.0;
         }
 
         // ============ MOVEMENT ============
@@ -1081,7 +904,7 @@
         const STRIDE_LENGTH_CROUCH = 0.75;
 
         let currentRoll = 0;
-        const MAX_ROLL   = 0.05;
+        const MAX_ROLL   = 0.08; // Slightly increased tilt for feel
         const ROLL_SPEED = 4.0;
 
         const prevCamWorldPos = new THREE.Vector3();
@@ -1165,12 +988,17 @@
                     velocity.z = 0;
                 }
 
+                // --- TILTING (ROLL) ---
+                // Tilt based on strafe velocity, plus a tiny bit of tilt when turning
                 const strafeVel = velocity.dot(_rightDir);
                 const strafeNorm = strafeVel / RUN_SPEED;
                 const targetRoll = -THREE.MathUtils.clamp(strafeNorm, -1, 1) * MAX_ROLL;
+                
+                // Smoothly interpolate the roll
                 currentRoll += (targetRoll - currentRoll) * Math.min(ROLL_SPEED * dt, 1);
                 cameraRig.rotation.z = currentRoll;
 
+                // --- HEAD BOBBING ---
                 const horizSpeed = Math.hypot(velocity.x, velocity.z);
                 let bobY = 0;
                 if (horizSpeed > 0.3) {
@@ -1182,6 +1010,8 @@
                 } else {
                     bobTime = 0;
                 }
+                
+                // Apply vertical bob on top of the eye height
                 cameraRig.position.y += (eyeHeight + bobY - cameraRig.position.y) * Math.min(dt * 20, 1);
 
                 const distThisFrame = Math.hypot(movedX, movedZ);
@@ -1214,19 +1044,45 @@
                 flashlight.intensity = flashlightTargetIntensity;
             }
 
-            dustMat.uniforms.uTime.value = elapsed;
+            // --- DUST ANIMATION (Continuous) ---
+            // Update dust particle positions to drift naturally, independent of camera
             const camWorldPos = new THREE.Vector3();
             camera.getWorldPosition(camWorldPos);
-            dustMat.uniforms.uCamPos.value.copy(camWorldPos);
 
-            const flWorldPos = new THREE.Vector3();
-            const flWorldDir = new THREE.Vector3();
-            flashlight.getWorldPosition(flWorldPos);
-            flashlight.getWorldDirection(flWorldDir);
-            dustMat.uniforms.uFlashlightPos.value.copy(flWorldPos);
-            dustMat.uniforms.uFlashlightDir.value.copy(flWorldDir);
-            dustMat.uniforms.uFlashlightOn.value = flashlightOn ? 1.0 : 0.0;
+            for (let i = 0; i < DUST_COUNT; i++) {
+                const data = dustData[i];
+                
+                // Drift using sine/cosine based on time
+                const t = elapsed * data.speed;
+                const offsetX = Math.sin(t * 0.8 + data.phase) * 0.6 + Math.cos(t * 1.5 + data.phase * 0.3) * 0.2;
+                const offsetY = Math.sin(t * 0.5 + data.phase * 1.2) * 0.4;
+                const offsetZ = Math.cos(t * 0.9 + data.phase * 0.7) * 0.6 + Math.sin(t * 1.2 + data.phase * 1.4) * 0.2;
 
+                let px = data.baseX + offsetX;
+                let py = data.baseY + offsetY;
+                let pz = data.baseZ + offsetZ;
+
+                // Wrap around the camera so dust is always present
+                const wrapR = 30.0;
+                const diffX = camWorldPos.x - px;
+                const diffZ = camWorldPos.z - pz;
+                
+                px = camWorldPos.x - (diffX - wrapR * 2 * Math.floor((diffX + wrapR) / (wrapR * 2)) - wrapR);
+                pz = camWorldPos.z - (diffZ - wrapR * 2 * Math.floor((diffZ + wrapR) / (wrapR * 2)) - wrapR);
+                
+                // Keep Y bounded to the room height
+                py = ((py % 3.2) + 3.2) % 3.2 + 0.1;
+
+                // Update the instance matrix
+                dummy.position.set(px, py, pz);
+                dummy.rotation.set(t * 0.5, t * 0.4, t * 0.3); // Slowly rotate
+                dummy.scale.setScalar(data.size);
+                dummy.updateMatrix();
+                dustParticles.setMatrixAt(i, dummy.matrix);
+            }
+            dustParticles.instanceMatrix.needsUpdate = true;
+
+            // Motion Blur Update
             const camWorldQuat = new THREE.Quaternion();
             camera.getWorldQuaternion(camWorldQuat);
 
@@ -1267,7 +1123,6 @@
                 window.innerWidth * renderer.getPixelRatio(),
                 window.innerHeight * renderer.getPixelRatio()
             );
-            if (dustMat) dustMat.uniforms.uPixelRatio.value = renderer.getPixelRatio();
         });
     </script>
 </body>
