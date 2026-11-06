@@ -132,6 +132,14 @@
         const cellWorldX = (cx) => (cx - halfW) * CELL_SIZE;
         const cellWorldZ = (cz) => (cz - halfH) * CELL_SIZE;
 
+        // Locker Dimensions (defined here so they are in scope everywhere)
+        const LOCKER_W = 1.2;
+        const LOCKER_H = 2.6;
+        const LOCKER_D = 0.8;
+        const DOOR_W = LOCKER_W - 0.05;
+        const DOOR_H = LOCKER_H - 0.05;
+        const DOOR_D = 0.05;
+
         // ============ RENDERER ============
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -468,56 +476,51 @@
 
         // ============ BIGGER LOCKERS (with cut-out vents) ============
         const lockers = [];
-        
-        // Dimensions
-        const LOCKER_W = 1.2;
-        const LOCKER_H = 2.6;
-        const LOCKER_D = 0.8;
-
         const lockerBodyGeo = new THREE.BoxGeometry(LOCKER_W, LOCKER_H, LOCKER_D);
         const lockerMat = new THREE.MeshStandardMaterial({ color: 0x2a3a3a, roughness: 0.6, metalness: 0.5 });
         
-        // Create a custom door geometry with actual holes for the vents
+        // Create a custom door geometry with actual holes for the vents and a central slit
         function createLockerDoorGeometry() {
-            const doorW = LOCKER_W - 0.05;
-            const doorH = LOCKER_H - 0.05;
-            const doorD = 0.05;
-            
-            // We'll build the door out of several boxes to create the slat gaps
             const doorGroup = new THREE.Group();
             const slatMat = new THREE.MeshStandardMaterial({ 
                 color: 0x2a3a3a, roughness: 0.5, metalness: 0.6, side: THREE.DoubleSide 
             });
 
             // Top solid section
-            const topSolid = new THREE.Mesh(new THREE.BoxGeometry(doorW, 0.5, doorD), slatMat);
-            topSolid.position.y = doorH/2 - 0.25;
+            const topSolid = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, 0.5, DOOR_D), slatMat);
+            topSolid.position.y = DOOR_H/2 - 0.25;
             doorGroup.add(topSolid);
 
             // Slats section (top vents)
             const slatHeight = 0.08;
             const slatGap = 0.06;
             for (let i = 0; i < 4; i++) {
-                const slat = new THREE.Mesh(new THREE.BoxGeometry(doorW, slatHeight, doorD), slatMat);
-                slat.position.y = doorH/2 - 0.55 - i * (slatHeight + slatGap);
+                const slat = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, slatHeight, DOOR_D), slatMat);
+                slat.position.y = DOOR_H/2 - 0.55 - i * (slatHeight + slatGap);
                 doorGroup.add(slat);
             }
 
-            // Middle solid section (where the lock/handle is)
-            const midSolid = new THREE.Mesh(new THREE.BoxGeometry(doorW, 1.0, doorD), slatMat);
-            midSolid.position.y = 0.1;
-            doorGroup.add(midSolid);
+            // Middle section (where the lock/handle is) - split into two sides for a central slit
+            const midHeight = 1.0;
+            const midY = 0.1;
+            const leftPanel = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W/2 - 0.05, midHeight, DOOR_D), slatMat);
+            leftPanel.position.set(-DOOR_W/4 - 0.025, midY, 0);
+            doorGroup.add(leftPanel);
+
+            const rightPanel = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W/2 - 0.05, midHeight, DOOR_D), slatMat);
+            rightPanel.position.set(DOOR_W/4 + 0.025, midY, 0);
+            doorGroup.add(rightPanel);
 
             // Bottom slats
             for (let i = 0; i < 4; i++) {
-                const slat = new THREE.Mesh(new THREE.BoxGeometry(doorW, slatHeight, doorD), slatMat);
+                const slat = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, slatHeight, DOOR_D), slatMat);
                 slat.position.y = -0.5 - i * (slatHeight + slatGap);
                 doorGroup.add(slat);
             }
 
             // Bottom solid
-            const botSolid = new THREE.Mesh(new THREE.BoxGeometry(doorW, 0.3, doorD), slatMat);
-            botSolid.position.y = -doorH/2 + 0.15;
+            const botSolid = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, 0.3, DOOR_D), slatMat);
+            botSolid.position.y = -DOOR_H/2 + 0.15;
             doorGroup.add(botSolid);
 
             return doorGroup;
@@ -550,9 +553,9 @@
                     door.castShadow = true;
                     lockerGroup.add(door);
 
-                    // Handle
+                    // Handle (now using DOOR_W from the outer scope)
                     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.2, 0.04), new THREE.MeshStandardMaterial({color: 0x888888, metalness: 0.9, roughness: 0.2}));
-                    handle.position.set(doorW/2 - 0.1, 0.1, LOCKER_D/2 + 0.08);
+                    handle.position.set(DOOR_W/2 - 0.1, 0.1, LOCKER_D/2 + 0.08);
                     lockerGroup.add(handle);
 
                     lockerGroup.position.set(lx, LOCKER_H/2, lz);
@@ -1033,14 +1036,13 @@
             locker.occupied = true;
             
             // Move camera inside the locker, right up against the door.
-            // The door is on the +Z side (local) of the locker.
-            // We want the eye about 0.15 units inside from the door face.
-            const localOffset = new THREE.Vector3(0, 0, LOCKER_D/2 - 0.15);
+            // Shift back slightly so the door doesn't clip into the near plane.
+            const localOffset = new THREE.Vector3(0, 0, LOCKER_D/2 - 0.25);
             localOffset.applyEuler(new THREE.Euler(0, locker.rotY, 0));
             
             const targetPos = locker.pos.clone().add(localOffset);
             
-            // Set the rig position, lower eye height slightly since lockers are tall
+            // Set the rig position
             cameraRig.position.set(targetPos.x, STAND_HEIGHT - 0.1, targetPos.z);
             
             interactPrompt.textContent = '[E] Exit';
