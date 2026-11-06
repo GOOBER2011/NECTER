@@ -1,77 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nectar</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍑</text></svg>" />
-  <!-- Load Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nectar 🍑</title>
+  <style>
+    /* ===== THEME & RESET ===== */
+    :root {
+      --bg-base: #0f0f11;
+      --bg-surface: #18181b;
+      --bg-surface-hover: #27272a;
+      --border: #2e2e33;
+      
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      
+      --peach-main: #ff7043;
+      --peach-hover: #f2582a;
+      --peach-glow: rgba(255, 112, 67, 0.15);
+      --peach-transparent: rgba(255, 112, 67, 0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden; /* Prevents the whole page from scrolling */
+    }
+
+    /* Generic SVG Icon Style */
+    svg { width: 22px; height: 22px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 250px;
+      background-color: var(--bg-base);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      flex-shrink: 0;
+      height: 100%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px 32px;
+      color: var(--peach-main);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .brand svg { width: 32px; height: 32px; fill: var(--peach-main); stroke: none; }
+
+    .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 12px;
+      border-radius: 12px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 17px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .nav-item:hover { background-color: var(--bg-surface-hover); }
+    .nav-item.active { color: var(--peach-main); }
+    .nav-item.active svg { fill: var(--peach-transparent); }
+
+    .btn-primary {
+      background-color: var(--peach-main);
+      color: #111;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background-color: var(--peach-hover); }
+    .btn-primary svg { width: 20px; height: 20px; stroke-width: 3; }
+
+    /* ===== MAIN CONTENT (SCROLL AREA) ===== */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 650px;
+      margin: 0 auto;
+      border-right: 1px solid var(--border);
+      border-left: 1px solid var(--border);
+      height: 100%;
+    }
+
+    .header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background-color: rgba(15, 15, 17, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header svg { color: var(--text-muted); cursor: pointer; }
+
+    /* The actual scrollable area */
+    .feed-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 60px;
+    }
+
+    /* Custom Scrollbar */
+    .feed-scroll::-webkit-scrollbar { width: 6px; }
+    .feed-scroll::-webkit-scrollbar-track { background: transparent; }
+    .feed-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .feed-scroll::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ===== COMPOSER ===== */
+    .composer { padding: 20px; border-bottom: 1px solid var(--border); }
+    
+    .composer-top { display: flex; gap: 12px; }
+    
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-surface-hover), #3f3f46);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: var(--text-main); flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .composer textarea {
+      width: 100%; background: transparent; border: none; outline: none; resize: none;
+      color: var(--text-main); font-size: 18px; font-family: inherit; padding-top: 10px;
+    }
+
+    .composer textarea::placeholder { color: var(--text-muted); }
+
+    .composer-tools {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-left: 56px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+    }
+
+    .tool-icons { display: flex; gap: 12px; color: var(--peach-main); }
+    .tool-icons svg { cursor: pointer; }
+    .tool-icons svg:hover { color: var(--peach-hover); }
+
+    .btn-post {
+      background-color: var(--peach-main); color: #111; border: none;
+      padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 15px;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn-post:hover { opacity: 0.9; }
+
+    /* ===== POSTS ===== */
+    .post {
+      padding: 20px; border-bottom: 1px solid var(--border);
+      display: flex; gap: 14px; transition: background 0.2s; cursor: pointer;
+    }
+    .post:hover { background-color: rgba(255,255,255,0.02); }
+
+    .post-content { flex: 1; min-width: 0; }
+
+    .post-header {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+    }
+
+    .name { font-weight: 700; font-size: 16px; color: var(--text-main); }
+    .handle { font-size: 15px; color: var(--text-muted); }
+    .time::before { content: "·"; margin: 0 6px; color: var(--text-muted); }
+    .time { font-size: 15px; color: var(--text-muted); }
+
+    .post-text {
+      font-size: 16px; line-height: 1.5; margin-bottom: 14px; white-space: pre-wrap;
+    }
+
+    /* Placeholder for images inside posts */
+    .post-image {
+      width: 100%; height: 240px; background-color: var(--bg-surface);
+      border-radius: 16px; border: 1px solid var(--border);
+      margin-bottom: 14px; display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); overflow: hidden;
+    }
+    .post-image img { width: 100%; height: 100%; object-fit: cover; }
+
+    .post-actions {
+      display: flex; justify-content: space-between; max-width: 420px; color: var(--text-muted);
+    }
+
+    .action-btn {
+      display: flex; align-items: center; gap: 8px; background: none; border: none;
+      color: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: color 0.2s;
+    }
+
+    .action-btn:hover { color: var(--peach-main); }
+    .action-btn.liked { color: var(--peach-main); }
+    .action-btn.liked svg { fill: var(--peach-main); }
+
+    /* ===== MOBILE RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar { width: 80px; padding: 24px 8px; align-items: center; }
+      .brand span, .nav-item span, .btn-primary span { display: none; }
+      .brand { padding: 0 0 32px; }
+      .nav-item { padding: 14px; justify-content: center; }
+      .btn-primary { padding: 14px; border-radius: 50%; }
+      .main-container { border: none; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ===== SIDEBAR (TikTok Style) ===== -->
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="brand">
-      <i data-lucide="droplet" class="brand-icon"></i>
-      <span class="brand-name">Nectar</span>
+      <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+      <span>Nectar</span>
     </div>
 
     <nav class="nav">
       <a href="#" class="nav-item active">
-        <i data-lucide="home"></i> <span>For You</span>
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
       </a>
       <a href="#" class="nav-item">
-        <i data-lucide="compass"></i> <span>Explore</span>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
       </a>
       <a href="#" class="nav-item">
-        <i data-lucide="users"></i> <span>Following</span>
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Notifications</span>
       </a>
       <a href="#" class="nav-item">
-        <i data-lucide="bell"></i> <span>Inbox</span>
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Messages</span>
       </a>
       <a href="#" class="nav-item">
-        <i data-lucide="user"></i> <span>Profile</span>
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
       </a>
     </nav>
 
-    <button class="btn-primary sidebar-cta">
-      <i data-lucide="plus"></i> Drop a Nectar
+    <button class="btn-primary">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Drop</span>
     </button>
   </aside>
 
-  <!-- ===== MAIN FEED ===== -->
-  <main class="feed">
-    <div class="feed-header">
-      <h1 class="page-title">For You</h1>
-    </div>
+  <!-- MAIN FEED -->
+  <main class="main-container">
+    
+    <header class="header">
+      <h1>Home</h1>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </header>
 
-    <!-- Composer -->
-    <section class="composer">
-      <div class="composer-top">
-        <div class="avatar">Y</div>
-        <textarea id="post-input" placeholder="What's sweet today?" rows="2"></textarea>
-      </div>
-      <div class="composer-actions">
-        <div class="composer-icons">
-          <button class="icon-btn"><i data-lucide="image"></i></button>
-          <button class="icon-btn"><i data-lucide="smile"></i></button>
+    <!-- SCROLLABLE FEED -->
+    <div class="feed-scroll">
+      
+      <!-- Composer -->
+      <div class="composer">
+        <div class="composer-top">
+          <div class="avatar">Y</div>
+          <textarea placeholder="What's sweet today?" rows="2"></textarea>
         </div>
-        <button id="post-btn" class="btn-primary">
-          Drop <i data-lucide="send"></i>
-        </button>
+        <div class="composer-tools">
+          <div class="tool-icons">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </div>
+          <button class="btn-post">Drop</button>
+        </div>
       </div>
-    </section>
 
-    <!-- Posts render here -->
-    <section id="feed-list" class="feed-list"></section>
+      <!-- Post 1 -->
+      <article class="post">
+        <div class="avatar" style="background: #ffebd6; color: #f2582a;">A</div>
+        <div class="post-content">
+          <div class="post-header">
+            <span class="name">Amara</span>
+            <span class="handle">@amara</span>
+            <span class="time">2m</span>
+          </div>
+          <p class="post-text">Just launched my first design portfolio! Let me know what you guys think of the color palette. I spent way too long tweaking the gradients. 🎨</p>
+          <div class="post-image">
+             <!-- Placeholder image for realism -->
+             <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" alt="Design">
+          </div>
+          <div class="post-actions">
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> 4
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> 12
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 128
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 2 -->
+      <article class="post">
+        <div class="avatar" style="background: #e0f2fe; color: #0284c7;">J</div>
+        <div class="post-content">
+          <div class="post-header">
+            <span class="name">Jules</span>
+            <span class="handle">@julesdev</span>
+            <span class="time">45m</span>
+          </div>
+          <p class="post-text">Nectar's peach theme is actually growing on me way more than I expected. It feels super premium but still friendly. 🍑</p>
+          <div class="post-actions">
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> 1
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> 0
+            </button>
+            <button class="action-btn liked">
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 42
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Post 3 -->
+      <article class="post">
+        <div class="avatar" style="background: #f3e8ff; color: #9333ea;">N</div>
+        <div class="post-content">
+          <div class="post-header">
+            <span class="name">Nadia</span>
+            <span class="handle">@nadia</span>
+            <span class="time">2h</span>
+          </div>
+          <p class="post-text">Morning coffee + code = perfect start ☕. I'm trying to build a completely vanilla HTML/CSS site today with no frameworks. Wish me luck!</p>
+          <div class="post-actions">
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> 8
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> 3
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 56
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+      </article>
+      
+      <!-- Post 4 (To show scroll) -->
+      <article class="post">
+        <div class="avatar">M</div>
+        <div class="post-content">
+          <div class="post-header">
+            <span class="name">Marcus</span>
+            <span class="handle">@marcus_builds</span>
+            <span class="time">3h</span>
+          </div>
+          <p class="post-text">Look at this view from the office today. Makes writing code slightly more bearable.</p>
+          <div class="post-image">
+             <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2600&auto=format&fit=crop" alt="Office">
+          </div>
+          <div class="post-actions">
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> 15
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> 1
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 220
+            </button>
+            <button class="action-btn">
+              <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+      </article>
+
+    </div>
   </main>
 
-  <script src="app.js"></script>
-  <script>
-    // Initialize icons
-    lucide.createIcons();
-  </script>
 </body>
 </html>
