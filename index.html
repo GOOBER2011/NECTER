@@ -752,23 +752,48 @@
             src.start();
         }
 
-        // ============ POST-PROCESSING ============
+        // ============ POST-PROCESSING (FIXED MOTION BLUR) ============
         const composer = new EffectComposer(renderer);
         composer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         composer.addPass(new RenderPass(scene, camera));
+
         const motionBlurPass = new ShaderPass({
-            uniforms: { tDiffuse: { value: null }, uStrength: { value: 0.0 } },
-            vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-            fragmentShader: `
-                uniform sampler2D tDiffuse; uniform float uStrength; varying vec2 vUv;
+            uniforms: { 
+                tDiffuse: { value: null }, 
+                uStrength: { value: 0.0 } 
+            },
+            vertexShader: `
+                varying vec2 vUv;
                 void main() {
-                    if(uStrength < 0.01) { gl_FragColor = texture2D(tDiffuse, vUv); return; }
-                    vec4 sum = vec4(0.0);
-                    for(int i=0; i<8; i++) {
-                        float t = (float(i)/7.0 - 0.5) * uStrength * 0.1;
-                        sum += texture2D(tDiffuse, vUv + vec2(t, t*0.5));
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }`,
+            fragmentShader: `
+                uniform sampler2D tDiffuse; 
+                uniform float uStrength; 
+                varying vec2 vUv;
+                
+                void main() {
+                    if(uStrength < 0.01) { 
+                        gl_FragColor = texture2D(tDiffuse, vUv); 
+                        return; 
                     }
-                    gl_FragColor = sum / 8.0;
+                    
+                    // Radial blur towards the center of the screen
+                    vec2 dir = vUv - vec2(0.5);
+                    vec4 sum = vec4(0.0);
+                    float total = 0.0;
+                    
+                    // 8 samples along the direction of the center
+                    for(int i=0; i<8; i++) {
+                        float t = float(i) / 7.0;
+                        float weight = 1.0 - abs(t - 0.5) * 2.0;
+                        vec2 offset = dir * t * uStrength * 0.15;
+                        sum += texture2D(tDiffuse, vUv - offset) * weight;
+                        total += weight;
+                    }
+                    
+                    gl_FragColor = sum / total;
                 }`
         });
         composer.addPass(motionBlurPass);
@@ -782,22 +807,18 @@
         const exitHud = document.getElementById('exitStatus');
         const crosshair = document.getElementById('crosshair');
         const flIndicator = document.getElementById('flashlightIndicator');
-        const prompt = document.getElementById('interactionPrompt');
         const blinkOverlay = document.getElementById('blinkOverlay');
         const vignette = document.getElementById('vignette');
         const winScreen = document.getElementById('winScreen');
 
-        // KEYBOARD INPUT SET
         const keys = new Set();
 
         let eyesClosed = false, blinkAnim = 0;
         let keysCollected = 0;
         let gameWon = false;
 
-        let monsterPos = new THREE.Vector3().copy(monsterGroup.position);
-        let monsterState = 'patrol'; // patrol, chase
+        let monsterState = 'patrol'; 
         let monsterPath = [];
-        let monsterTarget = new THREE.Vector3();
         let monsterTimer = 0;
 
         document.addEventListener('keydown', (e) => {
@@ -818,9 +839,7 @@
         });
         window.addEventListener('blur', () => keys.clear());
 
-        // Simple pathfinding helper
         function getNextMonsterCell(mx, mz, tx, tz) {
-            // A* Lite (very basic Dijkstra) for the monster
             const queue = [{ x: mx, z: mz, path: [] }];
             const visited = new Set();
             visited.add(`${mx},${mz}`);
@@ -851,7 +870,7 @@
                     }
                 }
             }
-            return []; // No path
+            return [];
         }
 
         // ============ GAME LOOP ============
@@ -900,7 +919,6 @@
                 if (!isInsideWall(cameraRig.position.x, cameraRig.position.z + mZ, 0.35)) cameraRig.position.z += mZ;
                 else velocity.z = 0;
 
-                // Tilt & Bob
                 currentRoll += (-(velocity.dot(camRight) / 7.0) * 0.08 - currentRoll) * Math.min(dt * 5, 1);
                 cameraRig.rotation.z = currentRoll;
 
@@ -911,18 +929,15 @@
                 }
                 cameraRig.position.y += (eyeHeight + Math.sin(bobTime) * 0.045 - cameraRig.position.y) * Math.min(dt * 15, 1);
 
-                // Player Footsteps
                 if (strideDist > 1.1) {
                     playSound(playerFootstepBuffer, false);
                     strideDist = 0;
                 }
 
-                // Flashlight Sway
                 const camQ = new THREE.Quaternion(); camera.getWorldQuaternion(camQ);
                 targetHolderQuat.slerp(camQ, Math.min(dt * 8, 1));
                 flashlightHolder.quaternion.copy(targetHolderQuat.clone().multiply(camQ.clone().invert()));
 
-                // Check Items
                 items.forEach(item => {
                     if (item.collected) return;
                     if (cameraRig.position.distanceTo(item.mesh.position) < 1.5) {
@@ -935,7 +950,6 @@
                     }
                 });
 
-                // Check Exit
                 if (cameraRig.position.distanceTo(exitDoor.position) < 2.5) {
                     if (keysCollected >= 3) {
                         gameWon = true;
@@ -946,7 +960,6 @@
                     }
                 }
 
-                // Doors
                 doors.forEach(door => {
                     const dist = cameraRig.position.distanceTo(door.mesh.position);
                     if (dist < 3.0) {
@@ -962,10 +975,8 @@
             const pPos = cameraRig.position;
             const distToPlayer = mPos.distanceTo(pPos);
 
-            // Line of sight check
             let canSeePlayer = false;
             if (distToPlayer < 25) {
-                // Simplified LOS: if no walls, sees player.
                 canSeePlayer = true; 
             }
 
@@ -978,25 +989,21 @@
             }
 
             if (monsterState === 'chase') {
-                // Move directly towards player fast
                 const dir = new THREE.Vector3().subVectors(pPos, mPos).normalize();
-                monsterGroup.position.addScaledVector(dir, 8.0 * dt); // Very fast
+                monsterGroup.position.addScaledVector(dir, 8.0 * dt); 
                 monsterGroup.lookAt(pPos.x, 1.5, pPos.z);
                 
-                // Rapid footsteps
                 monsterTimer -= dt;
                 if (monsterTimer <= 0) {
                     playSound(monsterFootstepBuffer, true);
                     monsterTimer = 0.35;
                 }
                 
-                // Catch player
                 if (distToPlayer < 1.5) {
                     alert("He caught you.");
                     window.location.reload();
                 }
             } else {
-                // Patrol randomly
                 const mGridX = Math.round(mPos.x / CELL_SIZE + halfW);
                 const mGridZ = Math.round(mPos.z / CELL_SIZE + halfH);
                 
@@ -1016,29 +1023,26 @@
                     if (mPos.distanceTo(nPos) < 0.5) monsterPath.shift();
                 }
 
-                // Slow, heavy footsteps
                 monsterTimer -= dt;
                 if (monsterTimer <= 0) {
                     playSound(monsterFootstepBuffer, true);
-                    monsterTimer = 1.5; // 1.5s interval
+                    monsterTimer = 1.5; 
                 }
             }
 
-            // Update Monster Audio Panner Position
             if (monsterPanner) {
                 monsterPanner.positionX.value = mPos.x;
                 monsterPanner.positionY.value = mPos.y;
                 monsterPanner.positionZ.value = mPos.z;
             }
 
-            // Flashlight Intensity Lerp
             flashlight.intensity += (flashlightTargetIntensity - flashlight.intensity) * Math.min(dt * 15, 1);
 
-            // Motion blur based on speed
+            // Motion blur based on speed and rotation
             const speed = Math.hypot(velocity.x, velocity.z);
-            motionBlurPass.uniforms.uStrength.value = Math.min(speed / 10.0, 1.0);
+            const targetBlur = Math.min(speed / 8.0, 1.0) * 0.4; 
+            motionBlurPass.uniforms.uStrength.value += (targetBlur - motionBlurPass.uniforms.uStrength.value) * Math.min(dt * 10, 1);
 
-            // Update Dust
             dustMat.uniforms.uTime.value = elapsed;
             const cPos = new THREE.Vector3();
             camera.getWorldPosition(cPos);
@@ -1050,7 +1054,6 @@
             composer.render();
         }
 
-        // ============ HELPER FUNCTIONS ============
         function isInsideWall(x, z, pad) {
             const gx = (x / CELL_SIZE) + halfW + 0.5;
             const gz = (z / CELL_SIZE) + halfH + 0.5;
@@ -1064,10 +1067,8 @@
             return false;
         }
 
-        // Fix initial spawn position if inside wall
         cameraRig.position.set(cellWorldX(0), STAND_HEIGHT, cellWorldZ(0));
 
-        // Init Audio on click
         overlay.addEventListener('click', () => {
             controls.lock();
             initAudio();
@@ -1081,7 +1082,6 @@
             if(!gameWon) overlay.classList.remove('hidden');
         });
 
-        // Start loop
         document.getElementById('loading').classList.add('hidden');
         overlay.style.display = 'flex';
         animate();
