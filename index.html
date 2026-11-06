@@ -47,14 +47,6 @@
         }
         #flashlightIndicator.visible { display: block; }
         #flashlightIndicator.on { color: #fff6a8; }
-        #interactPrompt {
-            position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);
-            color: #fff; font-size: 16px; font-family: monospace;
-            background: rgba(0,0,0,0.7); padding: 6px 14px; border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.3); pointer-events: none; z-index: 120;
-            display: none; text-shadow: 0 1px 2px #000;
-        }
-        #interactPrompt.visible { display: block; }
         #loading {
             position: absolute; inset: 0; display: flex;
             align-items: center; justify-content: center;
@@ -78,13 +70,12 @@
     <div id="overlay" style="display:none">
         <h1>MAZE</h1>
         <p><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> to move</p>
-        <p><span class="kbd">Shift</span> sprint · <span class="kbd">Ctrl</span> crouch · <span class="kbd">F</span> flashlight · <span class="kbd">E</span> hide</p>
+        <p><span class="kbd">Shift</span> sprint · <span class="kbd">Ctrl</span> crouch · <span class="kbd">F</span> flashlight</p>
         <p style="margin-top:16px;opacity:0.5">Click anywhere to begin</p>
     </div>
     <div id="crosshair"></div>
-    <div id="hud">WASD · SHIFT sprint · CTRL crouch · F flashlight · E hide · ESC release</div>
+    <div id="hud">WASD · SHIFT sprint · CTRL crouch · F flashlight · ESC release</div>
     <div id="flashlightIndicator">FLASHLIGHT: OFF</div>
-    <div id="interactPrompt"></div>
     <div id="errorMsg"></div>
 
     <script type="importmap">
@@ -131,14 +122,6 @@
         const halfH = (MAZE_H - 1) / 2;
         const cellWorldX = (cx) => (cx - halfW) * CELL_SIZE;
         const cellWorldZ = (cz) => (cz - halfH) * CELL_SIZE;
-
-        // Locker Dimensions
-        const LOCKER_W = 1.3;
-        const LOCKER_H = 2.6;
-        const LOCKER_D = 0.9;
-        const DOOR_W = LOCKER_W - 0.05;
-        const DOOR_H = LOCKER_H - 0.05;
-        const DOOR_D = 0.06;
 
         // ============ RENDERER ============
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -193,6 +176,8 @@
         for (let z = 0; z <= MAZE_H; z++) wallsH.push(new Array(MAZE_W).fill(true));
         for (let z = 0; z < MAZE_H; z++) wallsV.push(new Array(MAZE_W + 1).fill(true));
 
+        const pockets = [];
+
         function generateMaze() {
             const visited = [];
             for (let z = 0; z < MAZE_H; z++) visited.push(new Array(MAZE_W).fill(false));
@@ -225,6 +210,46 @@
             carve(0, 0);
         }
         generateMaze();
+
+        // --- Carve out pockets ---
+        // We iterate through the maze and pick 12 random solid walls to carve a pocket into.
+        let pocketsCreated = 0;
+        for (let attempts = 0; attempts < 500 && pocketsCreated < 12; attempts++) {
+            const isHorizontal = Math.random() > 0.5;
+            if (isHorizontal) {
+                const z = Math.floor(Math.random() * (MAZE_H + 1));
+                const x = Math.floor(Math.random() * MAZE_W);
+                // Only carve interior walls, don't mess with the exterior
+                if (z > 0 && z < MAZE_H && wallsH[z][x]) {
+                    // Check if we already put a pocket here
+                    if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'H')) {
+                        wallsH[z][x] = false; // open the wall
+                        pockets.push({
+                            axis: 'H', x, z, 
+                            wx: cellWorldX(x), 
+                            wz: cellWorldZ(z - 1) + CELL_SIZE / 2, // position at the wall boundary
+                            dir: 1 // pocket goes North (+Z)
+                        });
+                        pocketsCreated++;
+                    }
+                }
+            } else {
+                const z = Math.floor(Math.random() * MAZE_H);
+                const x = Math.floor(Math.random() * (MAZE_W + 1));
+                if (x > 0 && x < MAZE_W && wallsV[z][x]) {
+                    if (!pockets.some(p => p.x === x && p.z === z && p.axis === 'V')) {
+                        wallsV[z][x] = false;
+                        pockets.push({
+                            axis: 'V', x, z,
+                            wx: cellWorldX(x - 1) + CELL_SIZE / 2,
+                            wz: cellWorldZ(z),
+                            dir: 1 // pocket goes East (+X)
+                        });
+                        pocketsCreated++;
+                    }
+                }
+            }
+        }
 
         // ============ WALL TEXTURES ============
         function makeWallTextures() {
@@ -375,6 +400,79 @@
         instancedWalls.instanceMatrix.needsUpdate = true;
         scene.add(instancedWalls);
 
+        // ============ POCKET GEOMETRY & LANTERNS ============
+        const lanternMat = new THREE.MeshStandardMaterial({ 
+            color: 0x111111, emissive: 0xffaa44, emissiveIntensity: 2.0, roughness: 0.8 
+        });
+
+        for (const pocket of pockets) {
+            const pocketGroup = new THREE.Group();
+            
+            // Build the 3 walls and ceiling of the pocket
+            const pocketW = 1.6;
+            const pocketH = 1.2;
+            const pocketD = 1.6;
+
+            // The opening is the front; we build the back and sides.
+            // Using a Group makes positioning based on the pocket wall easy.
+            const wallGeo = new THREE.BoxGeometry(pocketW, pocketH, WALL_THICK);
+            const sideGeo = new THREE.BoxGeometry(WALL_THICK, pocketH, pocketD);
+            const topGeo = new THREE.BoxGeometry(pocketW, WALL_THICK, pocketD);
+
+            // Back wall
+            const back = new THREE.Mesh(wallGeo, wallMat);
+            back.position.set(0, pocketH/2, pocketD/2);
+            back.castShadow = true;
+            back.receiveShadow = true;
+            pocketGroup.add(back);
+
+            // Left wall
+            const left = new THREE.Mesh(sideGeo, wallMat);
+            left.position.set(-pocketW/2, pocketH/2, 0);
+            left.castShadow = true;
+            left.receiveShadow = true;
+            pocketGroup.add(left);
+
+            // Right wall
+            const right = new THREE.Mesh(sideGeo, wallMat);
+            right.position.set(pocketW/2, pocketH/2, 0);
+            right.castShadow = true;
+            right.receiveShadow = true;
+            pocketGroup.add(right);
+
+            // Ceiling (Low ceiling forces crouching)
+            const top = new THREE.Mesh(topGeo, wallMat);
+            top.position.set(0, pocketH, 0);
+            top.castShadow = true;
+            top.receiveShadow = true;
+            pocketGroup.add(top);
+
+            // Lantern on the back wall
+            const lantern = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.3, 0.2), lanternMat);
+            lantern.position.set(0, pocketH/2 + 0.2, pocketD/2 - 0.2);
+            pocketGroup.add(lantern);
+
+            // Point Light for the lantern
+            const lanternLight = new THREE.PointLight(0xffaa55, 1.5, 5);
+            lanternLight.position.copy(lantern.position);
+            pocketGroup.add(lanternLight);
+
+            // Position and rotate the whole pocket group
+            // In the H axis, the opening faces North (-Z) or South (+Z).
+            // In the V axis, it faces West (-X) or East (+X).
+            pocketGroup.position.set(pocket.wx, 0, pocket.wz);
+            
+            if (pocket.axis === 'H') {
+                // Opening faces towards +Z, so pocket is built towards -Z
+                pocketGroup.rotation.y = 0; 
+            } else {
+                // Opening faces towards +X, so pocket is built towards -X
+                pocketGroup.rotation.y = Math.PI / 2;
+            }
+
+            scene.add(pocketGroup);
+        }
+
         // ============ CEILING ============
         function makeCeilingTexture() {
             const S = 512;
@@ -474,88 +572,6 @@
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // ============ BIGGER LOCKERS (With Clear Line of Sight) ============
-        const lockers = [];
-        const lockerBodyGeo = new THREE.BoxGeometry(LOCKER_W, LOCKER_H, LOCKER_D);
-        // Darker interior material
-        const lockerMat = new THREE.MeshStandardMaterial({ color: 0x111515, roughness: 0.9, metalness: 0.1, side: THREE.DoubleSide });
-        
-        // Build the door out of horizontal slats with LARGE gaps
-        function createLockerDoorGeometry() {
-            const doorGroup = new THREE.Group();
-            const slatMat = new THREE.MeshStandardMaterial({ 
-                color: 0x2a3a3a, roughness: 0.5, metalness: 0.6, side: THREE.DoubleSide 
-            });
-
-            // Top solid section
-            const topSolid = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, 0.3, DOOR_D), slatMat);
-            topSolid.position.y = DOOR_H/2 - 0.15;
-            doorGroup.add(topSolid);
-
-            // Wide horizontal slats with clear gaps for seeing out
-            const slatHeight = 0.12;
-            const slatGap = 0.15; // Large gap for visibility
-            for (let i = 0; i < 5; i++) {
-                const slat = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, slatHeight, DOOR_D), slatMat);
-                // Distribute slats down the door
-                slat.position.y = 0.8 - i * (slatHeight + slatGap);
-                doorGroup.add(slat);
-            }
-
-            // Bottom solid
-            const botSolid = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, 0.4, DOOR_D), slatMat);
-            botSolid.position.y = -DOOR_H/2 + 0.2;
-            doorGroup.add(botSolid);
-
-            return doorGroup;
-        }
-
-        // Spawn lockers
-        for (let z = 0; z < MAZE_H; z++) {
-            for (let x = 0; x < MAZE_W; x++) {
-                if (Math.random() < 0.15) {
-                    const cx = cellWorldX(x);
-                    const cz = cellWorldZ(z);
-                    
-                    let lx = cx, lz = cz, rotY = 0;
-                    
-                    if (wallsH[z][x]) { lz = cz - CELL_SIZE/2 + LOCKER_D/2 + 0.1; rotY = 0; }
-                    else if (wallsH[z+1][x]) { lz = cz + CELL_SIZE/2 - LOCKER_D/2 - 0.1; rotY = Math.PI; }
-                    else if (wallsV[z][x]) { lx = cx - CELL_SIZE/2 + LOCKER_D/2 + 0.1; rotY = Math.PI/2; }
-                    else if (wallsV[z][x+1]) { lx = cx + CELL_SIZE/2 - LOCKER_D/2 - 0.1; rotY = -Math.PI/2; }
-                    else continue;
-
-                    const lockerGroup = new THREE.Group();
-                    
-                    const body = new THREE.Mesh(lockerBodyGeo, lockerMat);
-                    body.castShadow = true;
-                    body.receiveShadow = true;
-                    lockerGroup.add(body);
-
-                    const door = createLockerDoorGeometry();
-                    door.position.set(0, 0, LOCKER_D/2 + 0.01);
-                    door.castShadow = true;
-                    lockerGroup.add(door);
-
-                    // Handle
-                    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.25, 0.04), new THREE.MeshStandardMaterial({color: 0x888888, metalness: 0.9, roughness: 0.2}));
-                    handle.position.set(DOOR_W/2 - 0.1, -0.2, LOCKER_D/2 + 0.08);
-                    lockerGroup.add(handle);
-
-                    lockerGroup.position.set(lx, LOCKER_H/2, lz);
-                    lockerGroup.rotation.y = rotY;
-                    scene.add(lockerGroup);
-
-                    lockers.push({
-                        group: lockerGroup,
-                        pos: new THREE.Vector3(lx, LOCKER_H/2, lz),
-                        rotY: rotY,
-                        occupied: false
-                    });
-                }
-            }
-        }
-
         // ============ BROKEN CEILING LIGHTS ============
         const lightMat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x111111 });
         for (let i = 0; i < 10; i++) {
@@ -576,6 +592,7 @@
         // ============ SPAWN PLAYER ============
         cameraRig.position.set(cellWorldX(0), STAND_HEIGHT, cellWorldZ(0));
 
+        // Modified Collision to account for Crouch Height and Pockets
         function isInsideWall(x, z, padding = 0.35) {
             const gx = (x / CELL_SIZE) + halfW + 0.5;
             const gz = (z / CELL_SIZE) + halfH + 0.5;
@@ -585,6 +602,22 @@
             const fz = gz - cellZ;
             const padFrac = padding / CELL_SIZE;
 
+            // Check if we are in a pocket. If we are inside the pocket area, we can freely move
+            // even if there's a "wall" grid marker. 
+            // The pocket is built into the wall, so we just check if we are deeper than the wall thickness.
+            for (const p of pockets) {
+                if (p.axis === 'H') {
+                    const px = (p.wx - x);
+                    const pz = (p.wz - z);
+                    if (Math.abs(px) < 0.8 && pz > 0 && pz < 1.6) return false; 
+                } else {
+                    const px = (p.wx - x);
+                    const pz = (p.wz - z);
+                    if (Math.abs(pz) < 0.8 && px > 0 && px < 1.6) return false;
+                }
+            }
+
+            // Check standard walls
             if (fz < padFrac && cellX >= 0 && cellX < MAZE_W && cellZ >= 0 && cellZ <= MAZE_H) {
                 if (wallsH[cellZ] && wallsH[cellZ][cellX]) return true;
             }
@@ -948,11 +981,7 @@
         const crosshair = document.getElementById('crosshair');
         const hud = document.getElementById('hud');
         const flIndicator = document.getElementById('flashlightIndicator');
-        const interactPrompt = document.getElementById('interactPrompt');
         const loading = document.getElementById('loading');
-
-        let isHiding = false;
-        let nearLocker = null;
 
         loading.classList.add('hidden');
         overlay.style.display = 'flex';
@@ -977,10 +1006,6 @@
             flIndicator.classList.remove('visible');
             keys.clear();
             stopCurrentFootstep();
-            if (isHiding && nearLocker) {
-                isHiding = false;
-                nearLocker.occupied = false;
-            }
         });
 
         // ============ INPUT ============
@@ -989,15 +1014,7 @@
             if (!controls.isLocked) return;
             if (e.repeat) return;
             keys.add(e.code);
-            
             if (e.code === 'KeyF') toggleFlashlight();
-            if (e.code === 'KeyE') {
-                if (isHiding) {
-                    exitLocker();
-                } else if (nearLocker) {
-                    enterLocker(nearLocker);
-                }
-            }
         });
         document.addEventListener('keyup', (e) => keys.delete(e.code));
         window.addEventListener('blur', () => keys.clear());
@@ -1010,67 +1027,6 @@
             flIndicator.textContent = flashlightOn ? 'FLASHLIGHT: ON' : 'FLASHLIGHT: OFF';
             flIndicator.classList.toggle('on', flashlightOn);
             dustMat.uniforms.uFlashlightOn.value = flashlightOn ? 1.0 : 0.0;
-        }
-
-        // ============ HIDING MECHANIC ============
-        function enterLocker(locker) {
-            if (locker.occupied) return;
-            isHiding = true;
-            nearLocker = locker;
-            locker.occupied = true;
-            
-            // Move camera inside the locker, positioned further back so you see the door frame.
-            const localOffset = new THREE.Vector3(0, 0, LOCKER_D/2 - 0.4); 
-            localOffset.applyEuler(new THREE.Euler(0, locker.rotY, 0));
-            
-            const targetPos = locker.pos.clone().add(localOffset);
-            
-            // Set the rig position (lower slightly for immersion)
-            cameraRig.position.set(targetPos.x, STAND_HEIGHT - 0.15, targetPos.z);
-            
-            interactPrompt.textContent = '[E] Exit';
-            interactPrompt.classList.add('visible');
-        }
-
-        function exitLocker() {
-            if (!isHiding || !nearLocker) return;
-            
-            // Step out in front of the locker
-            const forward = new THREE.Vector3(0, 0, 1).applyEuler(new THREE.Euler(0, nearLocker.rotY, 0));
-            const exitPos = nearLocker.pos.clone().add(forward.multiplyScalar(1.2));
-            
-            cameraRig.position.set(exitPos.x, STAND_HEIGHT, exitPos.z);
-            
-            nearLocker.occupied = false;
-            nearLocker = null;
-            isHiding = false;
-            
-            interactPrompt.classList.remove('visible');
-        }
-
-        function checkLockerProximity() {
-            if (isHiding) return;
-            
-            let closest = null;
-            let minDist = 2.0;
-            
-            for (const locker of lockers) {
-                if (locker.occupied) continue;
-                const dist = cameraRig.position.distanceTo(locker.pos);
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = locker;
-                }
-            }
-            
-            if (closest) {
-                interactPrompt.textContent = '[E] Hide';
-                interactPrompt.classList.add('visible');
-                nearLocker = closest;
-            } else {
-                interactPrompt.classList.remove('visible');
-                nearLocker = null;
-            }
         }
 
         // ============ MOVEMENT ============
@@ -1117,20 +1073,11 @@
             const dt = Math.min(clock.getDelta(), 0.05);
             elapsed += dt;
 
-            if (controls.isLocked && !isHiding) {
-                checkLockerProximity();
-            } else if (isHiding) {
-                interactPrompt.textContent = '[E] Exit';
-                interactPrompt.classList.add('visible');
-            } else {
-                interactPrompt.classList.remove('visible');
-            }
-
-            const crouching = controls.isLocked && !isHiding && (keys.has('ControlLeft') || keys.has('ControlRight'));
+            const crouching = controls.isLocked && (keys.has('ControlLeft') || keys.has('ControlRight'));
             const targetEyeHeight = crouching ? CROUCH_HEIGHT : STAND_HEIGHT;
             eyeHeight += (targetEyeHeight - eyeHeight) * Math.min(dt * 12, 1);
 
-            if (controls.isLocked && !isHiding) {
+            if (controls.isLocked) {
                 const forwardInput = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
                 const strafeInput = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
 
@@ -1198,9 +1145,6 @@
                 }
                 if (horizSpeed < 0.2) strideDistance = Math.min(strideDistance, strideLen * 0.5);
 
-            } else if (isHiding) {
-                velocity.set(0, 0, 0);
-                cameraRig.rotation.z = 0;
             } else {
                 velocity.set(0, 0, 0);
                 currentRoll += (0 - currentRoll) * Math.min(dt * 6, 1);
