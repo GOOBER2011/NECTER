@@ -633,6 +633,9 @@
         const vignette = document.getElementById('vignette');
         const winScreen = document.getElementById('winScreen');
 
+        // FIX: Defined the keys Set
+        const keys = new Set();
+
         let eyesClosed = false, blinkAnim = 0;
         let keysCollected = 0;
         let gameWon = false;
@@ -646,6 +649,7 @@
         document.addEventListener('keydown', (e) => {
             if (!controls.isLocked || gameWon) return;
             if (e.repeat) return;
+            keys.add(e.code);
             if (e.code === 'KeyF') {
                 flashlightOn = !flashlightOn;
                 flashlightTargetIntensity = flashlightOn ? 22.0 : 0.0;
@@ -655,8 +659,10 @@
             if (e.code === 'KeyQ') eyesClosed = true;
         });
         document.addEventListener('keyup', (e) => {
+            keys.delete(e.code);
             if (e.code === 'KeyQ') eyesClosed = false;
         });
+        window.addEventListener('blur', () => keys.clear());
 
         // Simple pathfinding helper
         function getNextMonsterCell(mx, mz, tx, tz) {
@@ -697,6 +703,7 @@
         // ============ GAME LOOP ============
         const clock = new THREE.Clock();
         let elapsed = 0, strideDist = 0, bobTime = 0, currentRoll = 0;
+        const velocity = new THREE.Vector3();
 
         function animate() {
             requestAnimationFrame(animate);
@@ -804,11 +811,8 @@
             // Line of sight check
             let canSeePlayer = false;
             if (distToPlayer < 25) {
-                const dirToPlayer = new THREE.Vector3().subVectors(pPos, mPos).normalize();
-                const ray = new THREE.Raycaster(mPos.clone().setY(1.5), dirToPlayer, 0, distToPlayer);
-                // Simplified LOS: if no walls, sees player. (Skipping wall raycast for brevity, using distance & angle)
+                // Simplified LOS: if no walls, sees player.
                 canSeePlayer = true; 
-                // Note: In a real game you'd raycast against instanced walls here.
             }
 
             if (canSeePlayer) {
@@ -879,15 +883,6 @@
             // Motion blur based on speed
             const speed = Math.hypot(velocity.x, velocity.z);
             motionBlurPass.uniforms.uStrength.value = Math.min(speed / 10.0, 1.0);
-
-            // Update Dust
-            dustMat.uniforms.uTime.value = elapsed;
-            const cPos = new THREE.Vector3();
-            camera.getWorldPosition(cPos);
-            dustMat.uniforms.uCamPos.value.copy(cPos);
-            dustMat.uniforms.uFlashlightPos.value.copy(flashlight.getWorldPosition(new THREE.Vector3()));
-            dustMat.uniforms.uFlashlightDir.value.copy(flashlight.getWorldDirection(new THREE.Vector3()));
-            dustMat.uniforms.uFlashlightOn.value = flashlightOn ? 1 : 0;
 
             composer.render();
         }
