@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-black text-zinc-100 select-none">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RANKED CLICKER // EXECUTIVE EDITION</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -21,13 +23,36 @@
             mono: ['JetBrains Mono', 'monospace'],
           },
           colors: {
-            zinc: {
-              950: '#09090b',
-              900: '#18181b',
-              850: '#202023',
-              800: '#27272a',
-              750: '#333338',
-              700: '#3f3f46',
+            exec: {
+              bg: '#000000',
+              panel: '#09090b',
+              card: '#18181b',
+              border: '#27272a',
+              borderLight: '#3f3f46',
+              hover: '#27272a',
+              accent: '#ffffff',
+              green: '#e4e4e7',
+              red: '#71717a',
+              gold: '#a1a1aa'
+            }
+          },
+          animation: {
+            'spin-cw': 'spinCw 12s linear infinite',
+            'spin-ccw': 'spinCcw 8s linear infinite',
+            'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+          },
+          keyframes: {
+            spinCw: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' },
+            },
+            spinCcw: {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(-360deg)' },
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.3' },
+              '50%': { opacity: '0.75' },
             }
           }
         }
@@ -36,1198 +61,2426 @@
   </script>
 
   <style>
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: #09090b; }
-    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
-    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-
-    /* Core Animations */
-    @keyframes spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes spin-ccw { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-    @keyframes float-up {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-45px) scale(1.15); }
-    }
-    @keyframes pulse-subtle {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.8; }
+    :root {
+      --rank-primary: #ffffff;
+      --rank-secondary: #52525b;
+      --rank-glow-color: rgba(255, 255, 255, 0.25);
     }
 
-    .animate-spin-cw { animation: spin-cw 25s linear infinite; }
-    .animate-spin-ccw { animation: spin-ccw 20s linear infinite; }
-    .animate-float { animation: float-up 0.75s ease-out forwards; }
-    .animate-pulse-glow { animation: pulse-subtle 3s ease-in-out infinite; }
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      overflow-x: hidden;
+      background-color: #000000;
+      color: #f4f4f5;
+    }
 
-    .glow-border {
-      box-shadow: 0 0 15px -3px var(--rank-glow-color, rgba(255, 255, 255, 0.15));
+    /* Executive Micro Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
     }
-    .glow-text {
-      text-shadow: 0 0 10px var(--rank-glow-color, rgba(255, 255, 255, 0.3));
+    ::-webkit-scrollbar-track {
+      background: #09090b;
     }
-    .bg-grid-pattern {
-      background-size: 32px 32px;
-      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--rank-primary);
+    }
+
+    /* Dynamic Theme Accent Utilities */
+    .rank-text-theme { color: var(--rank-primary); }
+    .rank-border-theme { border-color: var(--rank-primary); }
+    .rank-bg-theme { background-color: var(--rank-primary); }
+    .rank-glow-box { box-shadow: 0 0 25px -4px var(--rank-glow-color); }
+
+    /* Hardware-Accelerated Floating Text */
+    .float-text-clean {
+      position: fixed;
+      pointer-events: none;
+      animation: floatUpAndFade 0.65s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      z-index: 9999;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.95);
+      will-change: transform, opacity;
+    }
+
+    @keyframes floatUpAndFade {
+      0% {
+        opacity: 1;
+        transform: translate3d(-50%, -50%, 0) translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(-50%, -50%, 0) translateY(-45px) scale(1.08);
+      }
+    }
+
+    .glass-exec {
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .view-screen {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .view-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.99);
+      position: absolute;
+      width: 100%;
+      visibility: hidden;
+    }
+    .view-active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+      visibility: visible;
+    }
+
+    /* SVG Icon Utility classes */
+    .svg-ic-sm { width: 14px; height: 14px; display: inline-block; vertical-align: middle; }
+    .svg-ic-md { width: 16px; height: 16px; display: inline-block; vertical-align: middle; }
+    .svg-ic-lg { width: 22px; height: 22px; display: inline-block; vertical-align: middle; }
+
+    .led-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Reel Smooth Transition */
+    .reel-spinning {
+      transition: transform 4.5s cubic-bezier(0.1, 0.95, 0.15, 1);
     }
   </style>
 </head>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-between relative selection:bg-white/20">
 
-<body class="h-full bg-black text-zinc-100 flex flex-col font-sans overflow-hidden antialiased">
+  <!-- Dynamic Backdrop Vector Grid Overlay -->
+  <div id="arenaDynamicPattern" class="fixed inset-0 pointer-events-none z-0 opacity-10 transition-all duration-700"></div>
 
-  <!-- ========================================== -->
-  <!-- 1. CINEMATIC ONBOARDING & AUTH MODAL       -->
-  <!-- ========================================== -->
-  <div id="auth-overlay" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-lg p-6 shadow-2xl relative overflow-hidden">
-      <div class="absolute -top-24 -left-24 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none"></div>
+  <!-- Ambient Dynamic Rank Glow -->
+  <div id="ambientRankGlow" class="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[540px] h-[540px] rounded-full blur-[160px] opacity-15 pointer-events-none z-0 transition-colors duration-700 rank-bg-theme"></div>
 
-      <!-- Header -->
-      <div class="text-center mb-6">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-xs font-mono text-zinc-400 mb-3">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          LOCAL PROFILE SECURE
-        </div>
-        <h1 class="text-2xl font-display font-bold tracking-wider text-white">RANKED CLICKER</h1>
-        <p class="text-xs font-mono text-zinc-400 mt-1">EXECUTIVE COMPETITIVE INTERFACE</p>
-      </div>
 
-      <!-- Auth Tabs -->
-      <div class="grid grid-cols-2 bg-zinc-900 p-1 rounded border border-zinc-800 mb-5 text-xs font-mono">
-        <button id="auth-tab-signin" onclick="switchAuthMode('signin')" class="py-2 text-center rounded font-semibold bg-zinc-800 text-white transition-all">SIGN IN</button>
-        <button id="auth-tab-signup" onclick="switchAuthMode('signup')" class="py-2 text-center rounded font-semibold text-zinc-400 hover:text-white transition-all">CREATE ACCOUNT</button>
-      </div>
+  <!-- ================= ONBOARDING & ACCOUNT AUTHENTICATION OVERLAY ================= -->
+  <div id="onboardingOverlay" class="fixed inset-0 z-50 bg-[#000000] flex items-center justify-center p-3 sm:p-4 transition-opacity duration-300">
+    <div class="max-w-md w-full glass-exec border border-exec-border rounded-xl p-5 sm:p-7 font-mono relative overflow-hidden shadow-2xl">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-white" id="onboardingBar"></div>
 
-      <!-- Auth Form -->
-      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
-        <div>
-          <label class="block text-2xs font-mono text-zinc-400 uppercase tracking-widest mb-1">Email Address</label>
-          <div class="relative">
-            <input type="email" id="auth-email" required placeholder="operator@rankedclicker.io" class="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-zinc-500 transition-all pl-9" />
-            <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-2xs font-mono text-zinc-400 uppercase tracking-widest mb-1">Password</label>
-          <div class="relative">
-            <input type="password" id="auth-password" required minlength="6" placeholder="••••••••••••" class="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-zinc-500 transition-all pl-9 pr-9" />
-            <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-zinc-500 hover:text-white">
-              <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <div id="signup-extra-fields" class="hidden space-y-4">
-          <div>
-            <label class="block text-2xs font-mono text-zinc-400 uppercase tracking-widest mb-1">GamerTag / Operator Handle</label>
-            <div class="relative">
-              <input type="text" id="auth-gamertag" maxlength="16" placeholder="APEX_PREDATOR" class="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-zinc-500 transition-all pl-9" />
-              <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" id="auth-submit-btn" class="w-full bg-white text-black font-mono font-bold text-xs py-2.5 rounded hover:bg-zinc-200 transition-all uppercase tracking-wider mt-2">
-          LOG IN TO TERMINAL
-        </button>
-      </form>
-
-      <div class="mt-4 text-center">
-        <button onclick="guestLogin()" class="text-xs font-mono text-zinc-500 hover:text-zinc-300 underline underline-offset-4">Continue as Guest (Local Offline)</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- 2. MAIN APP FRAME                          -->
-  <!-- ========================================== -->
-  <div class="flex-1 flex flex-col h-full max-w-7xl w-full mx-auto p-2 sm:p-4 gap-3 overflow-hidden">
-    
-    <!-- HEADER CONSOLE BAR -->
-    <header class="bg-zinc-950 border border-zinc-800 rounded-lg p-3 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-lg relative">
-      <!-- Player Profile & Rank Badge -->
-      <div class="flex items-center gap-3">
-        <div id="header-badge-container" class="w-12 h-12 bg-zinc-900 border border-zinc-700 rounded flex items-center justify-center relative p-1">
-          <!-- Dynamic SVG Badge Injected Here -->
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span id="header-gamertag" class="font-display font-bold text-base text-white tracking-wide">OPERATOR</span>
-            <span id="header-rank-title" class="text-2xs font-mono font-bold px-2 py-0.5 rounded border uppercase" style="color: #cd7f32; border-color: rgba(205, 127, 50, 0.4); background: rgba(205, 127, 50, 0.1);">BRONZE I</span>
-          </div>
-          <div class="text-xs font-mono text-zinc-400 flex items-center gap-2 mt-0.5">
-            <span>TIER <span id="header-tier-num" class="text-white font-bold">1</span>/27</span>
-            <span class="text-zinc-600">•</span>
-            <span id="header-rank-division" class="text-zinc-300 font-semibold">BRONZE DIVISION</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Currency & Progression Counters -->
-      <div class="flex items-center gap-4 sm:gap-6 ml-auto">
-        <!-- Ranked Points (RP) -->
-        <div class="text-right">
-          <div class="text-2xs font-mono text-zinc-400 uppercase tracking-widest">RANKED POINTS</div>
-          <div class="flex items-center justify-end gap-1.5">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span id="stat-rp" class="text-lg font-mono font-bold text-white tracking-tight">0</span>
-            <span class="text-xs font-mono text-zinc-400">RP</span>
-          </div>
-        </div>
-
-        <!-- Cash ($) -->
-        <div class="text-right border-l border-zinc-800 pl-4 sm:pl-6">
-          <div class="text-2xs font-mono text-zinc-400 uppercase tracking-widest">CASH BALANCE</div>
-          <div class="flex items-center justify-end gap-1">
-            <span class="text-lg font-mono font-bold text-emerald-400">$</span>
-            <span id="stat-cash" class="text-lg font-mono font-bold text-white tracking-tight">0</span>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- RANK PROGRESS BAR PANEL -->
-    <div class="bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 shrink-0 flex flex-col gap-1.5 shadow-sm">
-      <div class="flex justify-between items-center text-xs font-mono">
+      <!-- Terminal Header -->
+      <div class="flex items-center justify-between border-b border-exec-border pb-3 mb-4">
         <div class="flex items-center gap-2">
-          <span class="text-zinc-400">NEXT RANK PROMOTION:</span>
-          <span id="rank-progress-next-name" class="font-bold text-white">BRONZE II</span>
+          <span id="svgIconTerminalHeader" class="text-white"></span>
+          <span class="text-[11px] text-white font-bold tracking-widest uppercase">EXECUTIVE ENGINE // AUTH</span>
         </div>
-        <div id="rank-progress-percent" class="font-bold text-zinc-300">0%</div>
+        <span class="text-[10px] text-zinc-500 font-bold">MONOCHROME V7</span>
       </div>
-      <div class="w-full bg-zinc-900 border border-zinc-800 h-2.5 rounded-full overflow-hidden p-0.5">
-        <div id="rank-progress-bar" class="h-full rounded-full transition-all duration-300" style="width: 0%; background-color: #cd7f32;"></div>
+
+      <!-- Terminal Console Sequence -->
+      <div id="terminalLog" class="text-xs text-zinc-300 space-y-1 mb-5 min-h-[75px] font-mono leading-relaxed bg-exec-bg/80 p-3 rounded-lg border border-exec-border">
+        <!-- Injected via JS -->
       </div>
-    </div>
 
-    <!-- MAIN INTERFACE BODY (TABS & CONTENT) -->
-    <div class="flex-1 flex flex-col bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden relative">
-      
-      <!-- NAVIGATION TAB BAR -->
-      <nav class="flex border-b border-zinc-800 bg-zinc-900/50 overflow-x-auto shrink-0 font-mono text-xs">
-        <button onclick="setActiveTab('arena')" id="tab-btn-arena" class="px-5 py-3 font-semibold text-white border-b-2 border-white flex items-center gap-2 hover:bg-zinc-850 transition-all shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
-          ARENA
-        </button>
-        <button onclick="setActiveTab('upgrades')" id="tab-btn-upgrades" class="px-5 py-3 font-semibold text-zinc-400 border-b-2 border-transparent flex items-center gap-2 hover:bg-zinc-850 hover:text-zinc-200 transition-all shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          UPGRADES
-        </button>
-        <button onclick="setActiveTab('crates')" id="tab-btn-crates" class="px-5 py-3 font-semibold text-zinc-400 border-b-2 border-transparent flex items-center gap-2 hover:bg-zinc-850 hover:text-zinc-200 transition-all shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          CRATES & LOOT
-        </button>
-        <button onclick="setActiveTab('loadout')" id="tab-btn-loadout" class="px-5 py-3 font-semibold text-zinc-400 border-b-2 border-transparent flex items-center gap-2 hover:bg-zinc-850 hover:text-zinc-200 transition-all shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
-          LOADOUT
-        </button>
-        <button onclick="setActiveTab('ranks')" id="tab-btn-ranks" class="px-5 py-3 font-semibold text-zinc-400 border-b-2 border-transparent flex items-center gap-2 hover:bg-zinc-850 hover:text-zinc-200 transition-all shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-          RANK ROADMAP
-        </button>
-        <button onclick="setActiveTab('system')" id="tab-btn-system" class="px-5 py-3 font-semibold text-zinc-400 border-b-2 border-transparent flex items-center gap-2 hover:bg-zinc-850 hover:text-zinc-200 transition-all shrink-0 ml-auto">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          SYSTEM
-        </button>
-      </nav>
-
-      <!-- TAB CONTENT VIEWPORTS -->
-      <div class="flex-1 relative overflow-y-auto p-4">
-
-        <!-- ================= PAGE 1: ARENA ================= -->
-        <div id="tab-arena" class="h-full flex flex-col items-center justify-between gap-4 max-w-4xl mx-auto py-2">
-          
-          <!-- Metrics Bar -->
-          <div class="w-full grid grid-cols-3 gap-3 font-mono">
-            <div class="bg-zinc-900 border border-zinc-800 p-2.5 rounded text-center">
-              <div class="text-2xs text-zinc-500 uppercase">CLICK POWER</div>
-              <div id="stat-click-power" class="text-base font-bold text-white mt-0.5">+1 RP</div>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 p-2.5 rounded text-center">
-              <div class="text-2xs text-zinc-500 uppercase">AUTO PASSIVE</div>
-              <div id="stat-auto-rp" class="text-base font-bold text-white mt-0.5">0 RP/s</div>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 p-2.5 rounded text-center">
-              <div class="text-2xs text-zinc-500 uppercase">TIER PAYOUT</div>
-              <div id="stat-tier-payout" class="text-base font-bold text-emerald-400 mt-0.5">$10 / Tier</div>
-            </div>
-          </div>
-
-          <!-- Interactive Target Area -->
-          <div class="relative flex items-center justify-center my-auto w-full max-w-md aspect-square">
-            
-            <!-- Dynamic Rank SVG Backdrop Mesh -->
-            <div id="arena-backdrop" class="absolute inset-0 rounded-full border border-zinc-800 bg-zinc-950/80 flex items-center justify-center transition-all duration-700 glow-border">
-              <div class="w-full h-full rounded-full opacity-20 bg-grid-pattern"></div>
-            </div>
-
-            <!-- Rotating Indicator Rings -->
-            <div class="absolute inset-4 rounded-full border border-dashed border-zinc-700 animate-spin-cw pointer-events-none"></div>
-            <div class="absolute inset-10 rounded-full border border-zinc-800 animate-spin-ccw pointer-events-none opacity-60"></div>
-
-            <!-- Floating Text Yield Container -->
-            <div id="float-container" class="absolute inset-0 pointer-events-none z-30"></div>
-
-            <!-- CORE CLICKER BUTTON -->
-            <button id="main-click-btn" onmousedown="handleCoreClick(event)" class="relative z-20 w-44 h-44 sm:w-52 sm:h-52 rounded-full bg-zinc-900 border-2 border-zinc-700 hover:border-white focus:outline-none flex flex-col items-center justify-center shadow-2xl active:scale-95 transition-transform cursor-pointer group">
-              <!-- Rank Center Badge Icon -->
-              <div id="clicker-center-icon" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform">
-                <!-- SVG Crest inserted dynamically -->
-              </div>
-              <span class="font-display font-bold text-lg text-white tracking-wider group-hover:text-zinc-200">EXECUTE</span>
-              <span class="text-3xs font-mono text-zinc-500 uppercase tracking-widest mt-1">[ SPACEBAR ]</span>
-            </button>
-          </div>
-
-          <!-- Bottom Operational Note -->
-          <div class="text-center font-mono text-2xs text-zinc-500">
-            SYSTEM ID: <span class="text-zinc-400">RC-PRO-2026</span> • TACTILE HARDWARE SYNTH ACTIVE
-          </div>
+      <!-- Form View Container -->
+      <div id="operatorForm" class="opacity-0 transition-opacity duration-300 space-y-3.5">
+        
+        <!-- Auth Tabs: REGISTER vs LOGIN -->
+        <div class="grid grid-cols-2 border border-exec-border rounded-lg p-0.5 bg-exec-bg text-xs">
+          <button id="authTabRegister" class="py-1.5 rounded-md font-bold bg-white text-black cursor-pointer transition-colors">
+            CREATE ACCOUNT
+          </button>
+          <button id="authTabLogin" class="py-1.5 rounded-md text-zinc-400 hover:text-white cursor-pointer transition-colors">
+            SIGN IN
+          </button>
         </div>
 
-        <!-- ================= PAGE 2: UPGRADES ================= -->
-        <div id="tab-upgrades" class="hidden space-y-4 max-w-5xl mx-auto">
-          <!-- Multi-buy & Category Header -->
-          <div class="flex flex-wrap items-center justify-between gap-3 bg-zinc-900 border border-zinc-800 p-3 rounded">
-            <div class="flex gap-2 font-mono text-xs overflow-x-auto">
-              <button onclick="filterUpgrades('ALL')" id="filter-upg-ALL" class="px-3 py-1.5 rounded font-semibold bg-white text-black">ALL</button>
-              <button onclick="filterUpgrades('CLICK')" id="filter-upg-CLICK" class="px-3 py-1.5 rounded font-semibold bg-zinc-800 text-zinc-300 hover:text-white">TAP POWER</button>
-              <button onclick="filterUpgrades('AUTO')" id="filter-upg-AUTO" class="px-3 py-1.5 rounded font-semibold bg-zinc-800 text-zinc-300 hover:text-white">AUTOMATION</button>
-              <button onclick="filterUpgrades('PAYOUT')" id="filter-upg-PAYOUT" class="px-3 py-1.5 rounded font-semibold bg-zinc-800 text-zinc-300 hover:text-white">PAYOUT BOOST</button>
-            </div>
-            
-            <div class="flex items-center gap-2 font-mono text-xs ml-auto">
-              <span class="text-zinc-500">BUY MULTIPLIER:</span>
-              <div class="grid grid-cols-3 gap-1 bg-zinc-950 p-1 rounded border border-zinc-800">
-                <button onclick="setBuyMult(1)" id="buy-mult-1" class="px-2.5 py-1 rounded bg-zinc-800 text-white font-bold">1X</button>
-                <button onclick="setBuyMult(10)" id="buy-mult-10" class="px-2.5 py-1 rounded text-zinc-400 hover:text-white font-bold">10X</button>
-                <button onclick="setBuyMult('MAX')" id="buy-mult-MAX" class="px-2.5 py-1 rounded text-zinc-400 hover:text-white font-bold">MAX</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Upgrades Grid -->
-          <div id="upgrades-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <!-- Dynamic Upgrades Injected via JS -->
-          </div>
-        </div>
-
-        <!-- ================= PAGE 3: CRATES & LOOT ================= -->
-        <div id="tab-crates" class="hidden space-y-6 max-w-5xl mx-auto">
-          <!-- Unboxing Roller Viewport (CS:GO Spinner Style) -->
-          <div id="crate-unboxing-viewport" class="hidden bg-zinc-950 border border-zinc-800 rounded-lg p-4 text-center space-y-4">
-            <div class="flex items-center justify-between font-mono text-xs border-b border-zinc-800 pb-2">
-              <span class="text-zinc-400">CRATE SEQUENCE IN PROGRESS...</span>
-              <span id="unboxing-crate-title" class="font-bold text-white uppercase">COMMON MOUSE CRATE</span>
-            </div>
-            
-            <!-- Reel Container -->
-            <div class="relative w-full h-36 bg-zinc-900 border border-zinc-800 rounded overflow-hidden">
-              <!-- Center Selection Indicator -->
-              <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-white z-20 transform -translate-x-1/2 shadow-[0_0_10px_#fff]"></div>
-              
-              <!-- Moving Track -->
-              <div id="crate-reel-track" class="absolute left-0 top-0 bottom-0 flex items-center gap-2 px-2 transition-transform duration-0">
-                <!-- Reel Cards Injected Here -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Available Crates Catalog -->
+        <!-- Auth Inputs -->
+        <div class="space-y-2.5">
           <div>
-            <h2 class="font-display font-bold text-lg text-white mb-3">HARDWARE CRATE EXCHANGE</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              
-              <!-- Crate 1: Mouse -->
-              <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col justify-between space-y-3 hover:border-zinc-600 transition-all">
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between font-mono text-xs">
-                    <span class="text-zinc-400 uppercase">PERIPHERAL</span>
-                    <span class="text-emerald-400 font-bold">$150</span>
-                  </div>
-                  <h3 class="font-display font-bold text-base text-white">MOUSE CRATE</h3>
-                  <p class="text-2xs font-mono text-zinc-400">Contains high-precision clicking sensors for Click Power boost.</p>
-                </div>
-                <button onclick="openCrate('mouse')" class="w-full bg-white text-black font-mono font-bold text-xs py-2 rounded hover:bg-zinc-200 transition-all uppercase">
-                  UNBOX ($150)
-                </button>
-              </div>
-
-              <!-- Crate 2: Keyboard -->
-              <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col justify-between space-y-3 hover:border-zinc-600 transition-all">
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between font-mono text-xs">
-                    <span class="text-zinc-400 uppercase">KEYBOARD</span>
-                    <span class="text-emerald-400 font-bold">$400</span>
-                  </div>
-                  <h3 class="font-display font-bold text-base text-white">KEYBOARD CRATE</h3>
-                  <p class="text-2xs font-mono text-zinc-400">Mechanical switches yielding elevated Auto RP generation.</p>
-                </div>
-                <button onclick="openCrate('keyboard')" class="w-full bg-white text-black font-mono font-bold text-xs py-2 rounded hover:bg-zinc-200 transition-all uppercase">
-                  UNBOX ($400)
-                </button>
-              </div>
-
-              <!-- Crate 3: Monitor -->
-              <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col justify-between space-y-3 hover:border-zinc-600 transition-all">
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between font-mono text-xs">
-                    <span class="text-zinc-400 uppercase">DISPLAY</span>
-                    <span class="text-emerald-400 font-bold">$1,000</span>
-                  </div>
-                  <h3 class="font-display font-bold text-base text-white">MONITOR CRATE</h3>
-                  <p class="text-2xs font-mono text-zinc-400">High refresh displays maximizing Cash Tier Payout bonuses.</p>
-                </div>
-                <button onclick="openCrate('monitor')" class="w-full bg-white text-black font-mono font-bold text-xs py-2 rounded hover:bg-zinc-200 transition-all uppercase">
-                  UNBOX ($1,000)
-                </button>
-              </div>
-
-              <!-- Crate 4: PC Build -->
-              <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col justify-between space-y-3 hover:border-zinc-600 transition-all">
-                <div class="space-y-1">
-                  <div class="flex items-center justify-between font-mono text-xs">
-                    <span class="text-zinc-400 uppercase">SYSTEM RIG</span>
-                    <span class="text-emerald-400 font-bold">$2,500</span>
-                  </div>
-                  <h3 class="font-display font-bold text-base text-white">PC RIG CRATE</h3>
-                  <p class="text-2xs font-mono text-zinc-400">Custom workstations scaling overall Cash and RP multipliers.</p>
-                </div>
-                <button onclick="openCrate('pc')" class="w-full bg-white text-black font-mono font-bold text-xs py-2 rounded hover:bg-zinc-200 transition-all uppercase">
-                  UNBOX ($2,500)
-                </button>
-              </div>
-
+            <label class="block text-[9px] text-zinc-400 uppercase tracking-widest mb-1 font-bold">OPERATOR EMAIL</label>
+            <div class="relative flex items-center">
+              <span id="svgInputMail" class="absolute left-2.5 text-zinc-500"></span>
+              <input type="email" id="inputAuthEmail" placeholder="operator@league.com" class="w-full bg-exec-bg border border-exec-border rounded-lg pl-8 pr-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-white transition-colors">
             </div>
           </div>
-        </div>
 
-        <!-- ================= PAGE 4: LOADOUT & INVENTORY ================= -->
-        <div id="tab-loadout" class="hidden space-y-6 max-w-5xl mx-auto">
-          <!-- Active Equipped Hardware -->
           <div>
-            <h2 class="font-display font-bold text-lg text-white mb-3">ACTIVE EQUIPPED HARDWARE</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              
-              <!-- Slot: Mouse -->
-              <div id="slot-mouse" class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2">
-                <div class="text-2xs font-mono text-zinc-500 uppercase">MOUSE SLOT</div>
-                <div class="font-bold text-white text-sm text-zinc-400">EMPTY</div>
-              </div>
-
-              <!-- Slot: Keyboard -->
-              <div id="slot-keyboard" class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2">
-                <div class="text-2xs font-mono text-zinc-500 uppercase">KEYBOARD SLOT</div>
-                <div class="font-bold text-white text-sm text-zinc-400">EMPTY</div>
-              </div>
-
-              <!-- Slot: Monitor -->
-              <div id="slot-monitor" class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2">
-                <div class="text-2xs font-mono text-zinc-500 uppercase">MONITOR SLOT</div>
-                <div class="font-bold text-white text-sm text-zinc-400">EMPTY</div>
-              </div>
-
-              <!-- Slot: PC -->
-              <div id="slot-pc" class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2">
-                <div class="text-2xs font-mono text-zinc-500 uppercase">PC RIG SLOT</div>
-                <div class="font-bold text-white text-sm text-zinc-400">EMPTY</div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Inventory Items Storage -->
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <h2 class="font-display font-bold text-lg text-white">HARDWARE STORAGE INVENTORY</h2>
-              <span id="inventory-count-badge" class="font-mono text-xs text-zinc-400">0 ITEMS</span>
-            </div>
-            
-            <div id="inventory-items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              <!-- Inventory Items Injected Here -->
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= PAGE 5: RANK ROADMAP ================= -->
-        <div id="tab-ranks" class="hidden space-y-4 max-w-4xl mx-auto">
-          <div class="text-center mb-4">
-            <h2 class="font-display font-bold text-xl text-white">COMPETITION RANK LADDER</h2>
-            <p class="text-xs font-mono text-zinc-400">27 PROGRESSIVE TIERS ACROSS 9 MAJOR COMPETITIVE DIVISIONS</p>
-          </div>
-
-          <div id="ranks-roadmap-container" class="space-y-3">
-            <!-- 27 Ranks Generated via JS -->
-          </div>
-        </div>
-
-        <!-- ================= PAGE 6: SYSTEM & PREFERENCES ================= -->
-        <div id="tab-system" class="hidden space-y-6 max-w-3xl mx-auto font-mono text-xs">
-          <!-- Sound Synthesizer Controls -->
-          <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-3">
-            <h3 class="font-bold text-white uppercase text-sm border-b border-zinc-800 pb-2">AUDIO SYNTHESIZER</h3>
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-white font-semibold">Web Audio Synth Effects</div>
-                <div class="text-2xs text-zinc-400">Tactile audio feedback for clicks, purchases & promotions</div>
-              </div>
-              <button onclick="toggleSound()" id="sound-toggle-btn" class="px-4 py-2 bg-white text-black font-bold rounded">ENABLED</button>
-            </div>
-          </div>
-
-          <!-- Save Data Management -->
-          <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-3">
-            <h3 class="font-bold text-white uppercase text-sm border-b border-zinc-800 pb-2">DATA PORTABILITY & BACKUP</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button onclick="exportSaveData()" class="p-3 bg-zinc-950 border border-zinc-800 hover:border-zinc-600 rounded text-left space-y-1">
-                <div class="font-bold text-white">EXPORT SAVE DATA</div>
-                <div class="text-2xs text-zinc-500">Copy base64 encoded save string to clipboard</div>
-              </button>
-              <button onclick="importSaveData()" class="p-3 bg-zinc-950 border border-zinc-800 hover:border-zinc-600 rounded text-left space-y-1">
-                <div class="font-bold text-white">IMPORT SAVE DATA</div>
-                <div class="text-2xs text-zinc-500">Restore save state from string</div>
+            <label class="block text-[9px] text-zinc-400 uppercase tracking-widest mb-1 font-bold">ACCESS PASSWORD</label>
+            <div class="relative flex items-center">
+              <span id="svgInputLock" class="absolute left-2.5 text-zinc-500"></span>
+              <input type="password" id="inputAuthPassword" placeholder="••••••••••••" class="w-full bg-exec-bg border border-exec-border rounded-lg pl-8 pr-8 py-2 text-xs text-white font-mono focus:outline-none focus:border-white transition-colors">
+              <button id="btnTogglePasswordMask" type="button" class="absolute right-2.5 text-zinc-500 hover:text-zinc-300 cursor-pointer">
+                <span id="svgInputEye"></span>
               </button>
             </div>
           </div>
 
-          <!-- Account & Reset -->
-          <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-3">
-            <h3 class="font-bold text-white uppercase text-sm border-b border-zinc-800 pb-2">OPERATOR CONTROL</h3>
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-white font-semibold">Active Session</div>
-                <div id="system-account-email" class="text-2xs text-zinc-400">guest_operator@local</div>
+          <div id="registerOnlyFields" class="space-y-2.5">
+            <div>
+              <label class="block text-[9px] text-zinc-400 uppercase tracking-widest mb-1 font-bold">OPERATOR GAMERTAG</label>
+              <div class="relative flex items-center">
+                <span id="svgInputUser" class="absolute left-2.5 text-zinc-500"></span>
+                <input type="text" id="inputGamertag" maxlength="16" placeholder="Codename..." class="w-full bg-exec-bg border border-exec-border rounded-lg pl-8 pr-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-white transition-colors">
               </div>
-              <button onclick="logoutSession()" class="px-3 py-1.5 border border-zinc-700 hover:border-white text-zinc-300 rounded font-bold">LOG OUT</button>
             </div>
 
-            <div class="border-t border-zinc-800 pt-3 flex items-center justify-between">
-              <div>
-                <div class="text-red-400 font-semibold">HARD SYSTEM RESET</div>
-                <div class="text-2xs text-zinc-500">Permanently erase profile & all rank achievements</div>
+            <div>
+              <label class="block text-[9px] text-zinc-400 uppercase tracking-widest mb-1.5 font-bold">PROFILE EMBLEM VECTOR</label>
+              <div class="grid grid-cols-4 gap-2" id="avatarGrid">
+                <!-- SVG Avatars injected JS -->
               </div>
-              <button onclick="confirmHardReset()" class="px-4 py-2 bg-red-950 border border-red-800 text-red-400 hover:bg-red-900 rounded font-bold">RESET PROGRESS</button>
             </div>
           </div>
-
         </div>
 
+        <!-- Submit Button -->
+        <button id="btnSubmitAuth" class="w-full py-2.5 rounded-lg bg-white hover:bg-zinc-200 text-black font-extrabold text-xs tracking-wider uppercase cursor-pointer transition-colors shadow-lg shadow-white/10 flex items-center justify-center gap-2">
+          <span id="svgBtnAuthIcon"></span>
+          <span id="btnAuthText">INITIALIZE OPERATOR ACCOUNT</span>
+        </button>
+
+        <div class="text-center pt-1">
+          <span class="text-[9px] text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-1.5">
+            <span class="led-dot bg-white animate-pulse"></span>
+            LOCAL MONOCHROME STORAGE PERSISTENCE
+          </span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 3. JAVASCRIPT GAME ENGINE                  -->
-  <!-- ========================================== -->
+
+  <!-- ================= COMPACT GLOBAL HUD HEADER ================= -->
+  <header class="fixed top-0 left-0 right-0 z-40 bg-exec-panel/95 backdrop-blur-md border-b border-exec-border px-3 sm:px-6 py-2 flex items-center justify-between">
+    
+    <!-- Player Profile & Rank Status -->
+    <div class="flex items-center gap-2.5 cursor-pointer group" id="headerBrand">
+      <div class="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center p-0.5 bg-exec-card group-hover:border-white/40 transition-colors shadow-sm">
+        <div id="headerRankSvg" class="w-full h-full"></div>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span id="playerAvatarIconSvg" class="text-white"></span>
+          <h1 id="headerGamertag" class="font-display font-bold text-xs sm:text-sm tracking-wider text-white uppercase leading-none">OPERATOR</h1>
+          <span id="authBadge" class="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-white border border-white/20 flex items-center gap-1">
+            <span class="led-dot bg-white"></span>
+            ONLINE
+          </span>
+        </div>
+        <span id="headerRankSub" class="font-mono text-[9px] text-zinc-400 tracking-widest block mt-0.5 font-bold">BRONZE III</span>
+      </div>
+    </div>
+
+    <!-- Currency & Rates Bar -->
+    <div class="flex items-center gap-2 sm:gap-4 font-mono">
+      <!-- Spendable Cash -->
+      <div class="flex items-center gap-1.5 bg-exec-card border border-white/20 px-2.5 py-1 rounded-lg">
+        <span id="svgTopCash" class="text-white"></span>
+        <span id="topCashDisplay" class="text-xs font-extrabold text-white">$0.00</span>
+      </div>
+
+      <!-- Total RP -->
+      <div class="flex items-center gap-1.5 bg-exec-card border border-exec-border px-2.5 py-1 rounded-lg">
+        <span id="svgTopRp" class="text-white"></span>
+        <span id="topRpDisplay" class="text-xs font-extrabold text-white">0 RP</span>
+      </div>
+
+      <!-- SFX Mute Button -->
+      <button id="soundToggleBtn" class="p-1.5 rounded-lg bg-exec-card border border-exec-border hover:border-white/30 transition-colors text-zinc-400 hover:text-white cursor-pointer" title="Toggle SFX Audio">
+        <span id="soundIconSvg"></span>
+      </button>
+    </div>
+  </header>
+
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="relative z-10 w-full min-h-screen pt-16 pb-8 px-2 sm:px-6 max-w-7xl mx-auto flex flex-col justify-between">
+
+    <!-- ================= VIEW 1: EXECUTIVE MAIN MENU ================= -->
+    <section id="menuView" class="view-screen view-active flex flex-col items-center justify-center my-auto py-6 max-w-lg mx-auto w-full">
+      <div class="text-center mb-6">
+        <div class="inline-block px-3.5 py-1 rounded-full border border-white/20 bg-white/5 mb-4 backdrop-blur">
+          <span class="font-mono text-[10px] tracking-widest text-zinc-300 uppercase flex items-center gap-2">
+            <span id="svgMenuSeasonIcon" class="text-white"></span>
+            COMPETITIVE LEAGUE SEASON 01 // MONOCHROME
+          </span>
+        </div>
+
+        <!-- Multi-Layered Rank Crest Display -->
+        <div class="w-32 h-32 mx-auto mb-4 relative flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border border-white/20 animate-pulse-glow"></div>
+          <div id="menuCrestIcon" class="w-24 h-24 filter drop-shadow-xl transition-all duration-300"></div>
+        </div>
+
+        <h2 class="font-display text-3xl sm:text-5xl font-black tracking-wider text-white uppercase mb-1">
+          RANKED CLICKER
+        </h2>
+        <p class="font-mono text-[11px] text-zinc-400 max-w-md mx-auto leading-relaxed uppercase tracking-wider">
+          EXECUTIVE EDITION // ACCUMULATE RP TO UNLOCK 27 TIERS. OPEN CASES & UNLOCK GEAR LOADOUTS.
+        </p>
+      </div>
+
+      <!-- Navigation List -->
+      <div class="w-full space-y-2 font-mono text-xs">
+        <button id="btnPlay" class="w-full py-3.5 px-5 rounded-lg border border-white bg-white text-black hover:bg-zinc-200 font-extrabold tracking-wider flex items-center justify-between group cursor-pointer shadow-lg shadow-white/10 transition-all">
+          <span class="flex items-center gap-2">
+            <span id="svgBtnPlayIcon"></span>
+            ENTER CLICK ARENA
+          </span>
+          <span class="transform group-hover:translate-x-1 transition-transform">→</span>
+        </button>
+
+        <button id="btnCratesMenu" class="w-full py-3 px-5 rounded-lg glass-exec hover:bg-white/10 text-white font-bold flex items-center justify-between group cursor-pointer border border-exec-border">
+          <span class="flex items-center gap-2">
+            <span id="svgBtnCratesIcon" class="text-white"></span>
+            CRATE EXCHANGE & LOADOUT
+          </span>
+          <span id="svgBtnCratesArrow"></span>
+        </button>
+
+        <button id="btnLeaderboardMenu" class="w-full py-3 px-5 rounded-lg glass-exec hover:bg-white/10 text-white font-bold flex items-center justify-between group cursor-pointer border border-exec-border">
+          <span class="flex items-center gap-2">
+            <span id="svgBtnLeaderIcon" class="text-zinc-400"></span>
+            GLOBAL LEADERBOARD & ANALYTICS
+          </span>
+          <span id="svgBtnLeaderArrow"></span>
+        </button>
+
+        <button id="btnSettingsMenu" class="w-full py-3 px-5 rounded-lg glass-exec hover:bg-white/10 text-white font-bold flex items-center justify-between group cursor-pointer border border-exec-border">
+          <span class="flex items-center gap-2">
+            <span id="svgBtnSettingsIcon" class="text-zinc-400"></span>
+            SYSTEM & PROFILE PREFERENCES
+          </span>
+          <span id="svgBtnSettingsArrow"></span>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ================= VIEW 2: GAME EXECUTIVE DASHBOARD ================= -->
+    <section id="gameView" class="view-screen view-hidden w-full flex flex-col gap-3.5">
+      
+      <!-- TOP STATUS METRICS BAR -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 font-mono">
+        <!-- Metric 1: Current Tier -->
+        <div class="glass-exec rounded-xl p-2.5 flex items-center gap-2.5 border border-exec-border">
+          <div id="dashRankIcon" class="w-9 h-9 flex-shrink-0 flex items-center justify-center p-0.5 rounded-lg bg-exec-bg border border-white/10"></div>
+          <div class="overflow-hidden">
+            <span class="text-[8px] text-zinc-400 tracking-widest uppercase block">CURRENT TIER</span>
+            <span id="dashRankName" class="text-xs sm:text-sm font-display font-extrabold text-white tracking-wider uppercase truncate block">BRONZE III</span>
+          </div>
+        </div>
+
+        <!-- Metric 2: Lifetime RP -->
+        <div class="glass-exec rounded-xl p-2.5 flex flex-col justify-center border border-exec-border">
+          <span class="text-[8px] text-zinc-400 tracking-widest uppercase block">LIFETIME RP (PERMANENT)</span>
+          <span id="dashRpDisplay" class="text-xs sm:text-base font-extrabold text-white tracking-tight truncate">0 RP</span>
+        </div>
+
+        <!-- Metric 3: Passive Yields -->
+        <div class="glass-exec rounded-xl p-2.5 flex flex-col justify-center border border-exec-border">
+          <span class="text-[8px] text-zinc-400 tracking-widest uppercase block">PASSIVE YIELDS</span>
+          <div class="flex items-center gap-1.5 text-xs font-bold truncate">
+            <span id="dashRpsDisplay" class="text-white">+0 RP/s</span>
+            <span class="text-zinc-600">•</span>
+            <span id="dashCpsDisplay" class="text-zinc-300">+$0/s</span>
+          </div>
+        </div>
+
+        <!-- Metric 4: Spendable Cash -->
+        <div class="glass-exec rounded-xl p-2.5 flex flex-col justify-center border border-white/30 bg-white/5">
+          <span class="text-[8px] text-white font-bold tracking-widest uppercase block">SPENDABLE CASH ($)</span>
+          <span id="dashCashDisplay" class="text-sm sm:text-lg font-extrabold text-white tracking-tight truncate">$0.00</span>
+        </div>
+      </div>
+
+      <!-- MAIN PLAY HUB (Left Arena + Right Compact Tabs) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+
+        <!-- LEFT HUB: ZERO-LAG CLICK ARENA -->
+        <div class="lg:col-span-5 xl:col-span-5 flex flex-col gap-3">
+          
+          <!-- CLICKER CORE CONSOLE WITH RANK-CUSTOMIZED BACKDROP -->
+          <div id="arenaConsoleCard" class="glass-exec rounded-xl p-5 flex flex-col items-center justify-center text-center relative border border-exec-border min-h-[350px] overflow-hidden">
+            
+            <!-- Arena Background Pattern Container -->
+            <div id="arenaBackdropSvg" class="absolute inset-0 pointer-events-none opacity-20"></div>
+
+            <button id="btnBackMenu" class="absolute top-3 left-3 font-mono text-[9px] text-zinc-400 hover:text-white flex items-center gap-1 cursor-pointer bg-exec-bg/80 px-2.5 py-1 rounded-md border border-exec-border z-10">
+              ← MAIN MENU
+            </button>
+
+            <!-- RP Score Counter -->
+            <div class="mt-1 mb-3 z-10">
+              <span class="font-mono text-[9px] tracking-[0.2em] text-zinc-400 uppercase block mb-0.5">CURRENT RP TOTAL</span>
+              <div id="mainRpCount" class="font-mono text-3xl sm:text-4xl font-black tracking-tight text-white">
+                0 <span class="text-sm font-normal text-zinc-400">RP</span>
+              </div>
+            </div>
+
+            <!-- DYNAMIC CLICK CORE TARGET WITH ROTATING RINGS -->
+            <div class="relative flex items-center justify-center my-2 z-10">
+              <!-- Outer Counter-Rotating Indicator Ring 1 -->
+              <svg class="absolute w-44 h-44 sm:w-48 sm:h-48 pointer-events-none animate-spin-cw opacity-60" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="#ffffff" stroke-width="0.75" stroke-dasharray="4 8" />
+                <circle cx="50" cy="50" r="41" fill="none" stroke="#ffffff" stroke-width="0.5" stroke-dasharray="12 4" />
+              </svg>
+
+              <!-- Outer Counter-Rotating Indicator Ring 2 -->
+              <svg class="absolute w-38 h-38 sm:w-42 sm:h-42 pointer-events-none animate-spin-ccw opacity-40" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" fill="none" stroke="#71717a" stroke-width="0.5" stroke-dasharray="2 12" />
+              </svg>
+
+              <!-- Main Interactive Button Core -->
+              <button id="clickCoreBtn" class="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full border-2 border-white bg-exec-bg hover:scale-105 active:scale-95 transition-transform duration-75 flex items-center justify-center cursor-pointer focus:outline-none rank-glow-box overflow-hidden shadow-2xl">
+                <!-- Inner Button Pattern SVG -->
+                <div id="coreButtonPattern" class="absolute inset-0 opacity-30 pointer-events-none"></div>
+
+                <!-- Center Rank Emblem Crest -->
+                <div id="coreEmblemIcon" class="relative z-10 w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center filter drop-shadow-lg text-white"></div>
+              </button>
+            </div>
+
+            <!-- Yield & Keyboard Status -->
+            <div class="mt-3 font-mono text-[11px] text-zinc-400 flex items-center gap-2 z-10">
+              <span>CLICK YIELD: <strong id="clickYieldDisplay" class="text-white font-bold">+1 RP</strong></span>
+              <span>•</span>
+              <span class="hidden sm:inline">KEY: [ SPACEBAR ]</span>
+            </div>
+          </div>
+
+          <!-- PROMOTION PROGRESS TRACKER -->
+          <div class="glass-exec rounded-xl p-3.5 border border-exec-border">
+            <div class="flex items-center justify-between border-b border-exec-border pb-2 mb-2 font-mono">
+              <div>
+                <span class="text-[8px] text-zinc-400 tracking-widest uppercase block">NEXT PROMOTION TIER</span>
+                <h3 id="promoCurrentTierText" class="font-display text-xs font-bold text-white uppercase tracking-wider">BRONZE III → BRONZE II</h3>
+              </div>
+              <div class="text-right">
+                <span class="text-[8px] text-zinc-400 tracking-widest block">PROMOTION CASH REWARD</span>
+                <span id="promoRewardCash" class="text-xs font-bold text-white">+$20.00 CASH</span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-1 font-mono">
+              <div class="w-full bg-exec-bg border border-exec-border h-3 rounded-full p-0.5 relative overflow-hidden">
+                <div id="promoProgressBar" class="bg-white h-full rounded-full w-0 transition-all duration-300"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-zinc-400">
+                <span id="promoCurrentRpText">0 / 100 RP</span>
+                <span id="promoPercentText" class="font-bold text-white">0.0%</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- RIGHT PANEL: HIGH DENSITY COMPACT TAB SYSTEM -->
+        <div class="lg:col-span-7 xl:col-span-7 glass-exec rounded-xl border border-exec-border flex flex-col min-h-[520px] overflow-hidden">
+          
+          <!-- TAB HEADERS BAR -->
+          <div class="grid grid-cols-5 border-b border-exec-border font-mono text-[10px] sm:text-[11px]">
+            <button id="tabBtnUpgrades" class="py-2.5 text-center border-b-2 border-white text-white font-bold cursor-pointer transition-colors bg-white/5 flex items-center justify-center gap-1">
+              <span id="svgTabStoreIcon"></span>
+              STORE
+            </button>
+            <button id="tabBtnCrates" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
+              <span id="svgTabCratesIcon"></span>
+              CRATES
+            </button>
+            <button id="tabBtnLadder" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
+              <span id="svgTabLadderIcon"></span>
+              RANKS
+            </button>
+            <button id="tabBtnLeader" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
+              <span id="svgTabLeaderIcon"></span>
+              GLOBAL
+            </button>
+            <button id="tabBtnSettings" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
+              <span id="svgTabSettingsIcon"></span>
+              SYSTEM
+            </button>
+          </div>
+
+          <!-- TAB CONTENTS CONTAINER -->
+          <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between overflow-hidden">
+
+            <!-- TAB 1: UPGRADE MATRIX STORE -->
+            <div id="tabContentUpgrades" class="space-y-2.5 flex-1 flex flex-col">
+              
+              <!-- Store Category Sub-Filter & Multiplier Selector -->
+              <div class="flex flex-wrap items-center justify-between gap-1.5 border-b border-exec-border pb-2 font-mono text-[10px]">
+                <!-- Category Filters -->
+                <div class="flex bg-exec-bg border border-exec-border rounded-md p-0.5 overflow-x-auto">
+                  <button id="catBtnAll" class="px-2 py-0.5 rounded bg-white text-black font-bold cursor-pointer">ALL</button>
+                  <button id="catBtnClick" class="px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer">TAP</button>
+                  <button id="catBtnPrp" class="px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer">AUTO RP</button>
+                  <button id="catBtnPcash" class="px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer">PAYOUTS</button>
+                  <button id="catBtnPerks" class="px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer">PERKS</button>
+                </div>
+
+                <!-- Buy Multipliers -->
+                <div class="flex bg-exec-bg border border-exec-border rounded-md p-0.5">
+                  <button id="buyAmt1" class="px-2 py-0.5 rounded bg-white text-black font-bold cursor-pointer">1X</button>
+                  <button id="buyAmt10" class="px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer">10X</button>
+                  <button id="buyAmtMax" class="px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer">MAX</button>
+                </div>
+              </div>
+
+              <!-- Upgrade Items List -->
+              <div id="upgradesList" class="space-y-2 overflow-y-auto max-h-[410px] pr-1"></div>
+            </div>
+
+
+            <!-- TAB 2: CRATE EXCHANGE & EQUIPMENT LOADOUT -->
+            <div id="tabContentCrates" class="hidden space-y-3 flex-1 flex flex-col font-mono overflow-y-auto max-h-[440px] pr-1">
+              
+              <!-- SECTION A: EQUIPPED LOADOUT GRID -->
+              <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg space-y-2">
+                <div class="flex items-center justify-between border-b border-exec-border pb-1.5 text-[10px]">
+                  <span class="font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <span id="svgLoadoutIcon" class="text-white"></span>
+                    ACTIVE HARDWARE LOADOUT
+                  </span>
+                  <span id="loadoutTotalBonus" class="text-zinc-400">EQUIPPED BONUSES ACTIVE</span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[9px]" id="equippedSlotsGrid">
+                  <!-- Injected JS Slots for Mouse, Keyboard, Monitor, PC -->
+                </div>
+              </div>
+
+              <!-- SECTION B: CRATE EXCHANGE STORE -->
+              <div>
+                <div class="text-[10px] text-zinc-400 uppercase tracking-widest mb-1.5 font-bold">AVAILABLE EQUIPMENT CRATES</div>
+                <div id="cratesStoreGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <!-- Injected JS Crates -->
+                </div>
+              </div>
+
+              <!-- SECTION C: INVENTORY MANAGER -->
+              <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg space-y-2">
+                <div class="flex items-center justify-between text-[10px] border-b border-exec-border pb-1.5">
+                  <span class="font-bold text-white uppercase">HARDWARE INVENTORY</span>
+                  <span id="inventoryCountText" class="text-zinc-400">0 ITEMS OWNED</span>
+                </div>
+
+                <div id="inventoryList" class="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                  <!-- Injected Inventory Cards -->
+                </div>
+              </div>
+
+            </div>
+
+
+            <!-- TAB 3: RANK ROADMAP (27 TIERS) -->
+            <div id="tabContentLadder" class="hidden space-y-2 overflow-y-auto max-h-[440px] pr-1 font-mono">
+              <div class="text-[10px] text-zinc-400 mb-1.5 pb-1 border-b border-exec-border flex justify-between">
+                <span>27 COMPETITIVE TIERS</span>
+                <span>RP REQ & CASH BONUS</span>
+              </div>
+              <div id="ladderList" class="space-y-1.5"></div>
+            </div>
+
+
+            <!-- TAB 4: GLOBAL LEADERBOARD & ANALYTICS -->
+            <div id="tabContentLeader" class="hidden space-y-2.5 overflow-y-auto max-h-[440px] pr-1 font-mono text-xs">
+              <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg flex items-center justify-between">
+                <div>
+                  <span class="text-[8px] text-zinc-400 uppercase block">YOUR RANKING POSITION</span>
+                  <span id="leaderPlayerPos" class="text-xs font-bold text-white">#-- TOP 100</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[8px] text-zinc-400 uppercase block">ACTIVE LEAGUE OPERATORS</span>
+                  <span class="text-xs font-bold text-white">10,000 ONLINE</span>
+                </div>
+              </div>
+
+              <div id="leaderboardList" class="space-y-1.5"></div>
+            </div>
+
+
+            <!-- TAB 5: SYSTEM & ACCOUNT PREFERENCES -->
+            <div id="tabContentSettings" class="hidden space-y-3 font-mono text-xs overflow-y-auto max-h-[440px] pr-1">
+              
+              <!-- Account Profile Card -->
+              <div class="bg-exec-card border border-exec-border p-2.5 rounded-lg flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div id="profileIconLarge" class="w-8 h-8 text-white flex items-center justify-center p-1 bg-exec-bg rounded-lg border border-white/10"></div>
+                  <div>
+                    <h4 id="profileGamertag" class="font-display text-sm font-bold text-white uppercase">OPERATOR</h4>
+                    <span id="profileEmail" class="text-[9px] text-zinc-400 block">operator@league.com</span>
+                  </div>
+                </div>
+                <button id="btnSignOutProfile" class="p-1.5 rounded bg-exec-bg border border-exec-border hover:border-white/40 text-zinc-400 hover:text-white transition-colors cursor-pointer" title="Switch Operator Account">
+                  <span id="svgProfileLogout"></span>
+                </button>
+              </div>
+
+              <!-- Career Lifetime Stats -->
+              <div class="space-y-1 text-zinc-300 border-t border-exec-border pt-2 text-[11px]">
+                <div class="flex justify-between py-0.5 border-b border-exec-border/40">
+                  <span class="text-zinc-400">TOTAL ARENA CLICKS:</span>
+                  <span id="statClicks" class="text-white font-bold">0</span>
+                </div>
+                <div class="flex justify-between py-0.5 border-b border-exec-border/40">
+                  <span class="text-zinc-400">TOTAL CASH EARNED ($):</span>
+                  <span id="statLifetimeCash" class="text-white font-bold">$0.00</span>
+                </div>
+                <div class="flex justify-between py-0.5 border-b border-exec-border/40">
+                  <span class="text-zinc-400">TIER PROMOTIONS:</span>
+                  <span id="statPromotions" class="text-white font-bold">0</span>
+                </div>
+              </div>
+
+              <!-- System Toggles & Persistence Tools -->
+              <div class="pt-2 border-t border-exec-border space-y-2">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-white font-semibold">SYNTH AUDIO SFX</span>
+                  <button id="settingSoundToggle" class="px-2.5 py-1 rounded bg-exec-bg border border-exec-border text-white cursor-pointer font-bold">ENABLED</button>
+                </div>
+
+                <button id="btnSaveData" class="w-full py-1.5 rounded bg-white/10 text-white border border-white/20 hover:bg-white/20 font-bold cursor-pointer text-xs">
+                  MANUAL SAVE GAME
+                </button>
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="btnExportSave" class="py-1.5 rounded bg-exec-bg border border-exec-border hover:border-white/30 text-white cursor-pointer flex items-center justify-center gap-1 text-xs">
+                    <span id="svgBtnExport"></span> EXPORT
+                  </button>
+                  <button id="btnImportSave" class="py-1.5 rounded bg-exec-bg border border-exec-border hover:border-white/30 text-white cursor-pointer flex items-center justify-center gap-1 text-xs">
+                    <span id="svgBtnImport"></span> IMPORT
+                  </button>
+                </div>
+                <button id="btnResetModal" class="w-full py-1.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-700 hover:bg-zinc-800 font-bold cursor-pointer text-xs">
+                  HARD RESET PROGRESS
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- FOOTER BAR -->
+    <footer class="w-full flex flex-col sm:flex-row items-center justify-between font-mono text-[9px] text-zinc-500 border-t border-exec-border/80 pt-3 mt-5 gap-1.5">
+      <div class="flex items-center gap-1.5">
+        <span id="svgFooterShield"></span>
+        RANKED CLICKER // EXECUTIVE EDITION (MONOCHROME)
+      </div>
+      <div class="flex items-center gap-3">
+        <span>STORE & CRATES: CASH ($)</span>
+        <span>SAVE: LOCAL ENCRYPTED V7</span>
+      </div>
+    </footer>
+
+  </main>
+
+
+  <!-- ================= MODALS ================= -->
+  
+  <!-- CRATE OPENING HORIZONTAL REEL SPINNER MODAL -->
+  <div id="crateRollModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="glass-exec border border-white/20 rounded-xl w-full max-w-md p-5 text-center font-mono relative overflow-hidden shadow-2xl">
+      <div class="text-[9px] text-zinc-400 tracking-[0.25em] uppercase mb-1">EQUIPMENT UNBOXING SEQUENCE</div>
+      <h3 id="crateRollTitle" class="font-display text-lg font-bold text-white uppercase tracking-wider mb-3">OPENING COMMON MOUSE CRATE</h3>
+      
+      <!-- Horizontal Reel Container -->
+      <div class="relative w-full h-28 bg-zinc-950 border-y-2 border-white/20 overflow-hidden my-3 flex items-center">
+        <!-- Center Pointer indicator -->
+        <div class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1 bg-white z-20 shadow-[0_0_10px_#fff]"></div>
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-t-[8px] border-t-white z-20"></div>
+        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent border-b-[8px] border-b-white z-20"></div>
+
+        <!-- Scrollable Item Reel Track -->
+        <div id="crateReelTrack" class="flex items-center gap-2 absolute left-0" style="transform: translateX(0px);">
+          <!-- Dynamically generated reel cards -->
+        </div>
+      </div>
+
+      <!-- Result Reveal Panel (Hidden during spin) -->
+      <div id="crateResultPanel" class="hidden space-y-3 pt-2">
+        <div class="bg-zinc-900 border border-zinc-700 p-3 rounded-lg flex items-center gap-3 text-left">
+          <div id="crateResultIcon" class="w-12 h-12 rounded-lg bg-zinc-950 border border-white/20 flex items-center justify-center text-white text-xl p-2 flex-shrink-0"></div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <h4 id="crateResultName" class="font-display text-sm font-bold text-white truncate uppercase">PRO LASER MOUSE</h4>
+              <span id="crateResultRarity" class="text-[9px] px-1.5 py-0.5 rounded font-bold border border-white/30 text-white bg-zinc-800">RARE</span>
+            </div>
+            <p id="crateResultStats" class="text-xs text-zinc-300 font-bold mt-0.5">+15 Click RP Power</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="btnEquipCrateItem" class="flex-1 py-2 rounded-lg bg-white text-black font-extrabold text-xs uppercase cursor-pointer hover:bg-zinc-200 transition-colors">
+            EQUIP ITEM NOW
+          </button>
+          <button id="btnSellCrateItem" class="flex-1 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-bold text-xs uppercase cursor-pointer hover:bg-zinc-800 transition-colors">
+            SELL FOR CASH ($)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMOTION CELEBRATION MODAL -->
+  <div id="promoModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="glass-exec border-2 border-white rounded-xl w-full max-w-sm p-5 text-center transform scale-95 transition-transform duration-200 relative overflow-hidden shadow-2xl">
+      <div class="font-mono text-[9px] tracking-[0.25em] text-zinc-400 uppercase mb-1">PROMOTION CLEARED</div>
+      <h2 id="modalPromoTitle" class="font-display text-2xl font-black text-white uppercase tracking-wider mb-2">PROMOTED TO SILVER III</h2>
+      
+      <!-- Multi-Layered Crest Display -->
+      <div class="w-24 h-24 mx-auto my-3 flex items-center justify-center relative">
+        <div id="modalPromoSvg" class="w-20 h-20 filter drop-shadow-xl"></div>
+      </div>
+
+      <div class="bg-exec-bg/80 border border-exec-border rounded-lg p-2.5 my-3 font-mono">
+        <span class="text-[9px] text-zinc-400 block uppercase">CASH REWARD AWARDED</span>
+        <span id="modalPromoCash" class="text-lg font-extrabold text-white">$250.00</span>
+      </div>
+
+      <button id="modalPromoClose" class="w-full py-2.5 rounded-lg bg-white text-black font-mono font-extrabold cursor-pointer hover:bg-zinc-200 transition-colors text-xs">
+        CONTINUE CLIMBING
+      </button>
+    </div>
+  </div>
+
+  <!-- OFFLINE EARNINGS MODAL -->
+  <div id="offlineModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="glass-exec border border-exec-border rounded-xl w-full max-w-sm p-5 text-center font-mono">
+      <div class="text-[9px] text-zinc-400 tracking-widest uppercase mb-1">OFFLINE ACCUMULATION SUMMARY</div>
+      <h3 class="font-display text-xl font-bold text-white uppercase tracking-wider mb-1">WELCOME BACK OPERATOR</h3>
+      <p id="offlineTimeText" class="text-[11px] text-zinc-400 mb-3">You were away for 00:00:00</p>
+
+      <div class="grid grid-cols-2 gap-2 my-3">
+        <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg">
+          <span class="text-[8px] text-zinc-400 block">RP GAINED</span>
+          <span id="offlineRpEarned" class="text-xs font-bold text-white">+0 RP</span>
+        </div>
+        <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg">
+          <span class="text-[8px] text-white block">CASH GAINED</span>
+          <span id="offlineCashEarned" class="text-xs font-bold text-white">+$0.00</span>
+        </div>
+      </div>
+
+      <button id="offlineModalClose" class="w-full py-2.5 rounded-lg bg-white text-black font-bold cursor-pointer hover:bg-zinc-200 text-xs">
+        COLLECT EARNINGS
+      </button>
+    </div>
+  </div>
+
+  <!-- EXPORT / IMPORT MODAL -->
+  <div id="saveModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="glass-exec border border-exec-border rounded-xl w-full max-w-sm p-5 relative font-mono text-xs">
+      <button id="saveModalClose" class="absolute top-2.5 right-2.5 text-zinc-400 hover:text-white cursor-pointer px-1.5">✕</button>
+      <h3 id="saveModalTitle" class="font-display text-base font-bold text-white uppercase mb-2">EXPORT SAVE DATA</h3>
+      
+      <textarea id="saveModalArea" class="w-full h-24 bg-exec-bg border border-exec-border rounded-lg p-2 text-[10px] text-zinc-300 font-mono mb-3 focus:outline-none focus:border-white/40 resize-none"></textarea>
+
+      <button id="saveModalActionBtn" class="w-full py-2 rounded bg-white text-black font-bold cursor-pointer hover:bg-zinc-200">
+        COPY TO CLIPBOARD
+      </button>
+    </div>
+  </div>
+
+  <!-- HARD RESET CONFIRMATION MODAL -->
+  <div id="resetModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="glass-exec border border-zinc-700 rounded-xl w-full max-w-sm p-5 text-center font-mono">
+      <h3 class="font-display text-lg font-bold text-white uppercase mb-1">CONFIRM HARD RESET</h3>
+      <p class="text-xs text-zinc-400 mb-4">Permanently wipes all local accounts, RP, Cash ($), unlocked ranks, store upgrades, crates, and equipment inventory.</p>
+      
+      <div class="flex gap-2 text-xs">
+        <button id="btnConfirmReset" class="flex-1 py-2 rounded bg-white text-black font-bold cursor-pointer hover:bg-zinc-200">
+          ERASE ALL DATA
+        </button>
+        <button id="btnCancelReset" class="flex-1 py-2 rounded bg-exec-bg border border-exec-border text-white hover:border-white/30 cursor-pointer">
+          CANCEL
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= JAVASCRIPT ENGINE ================= -->
   <script>
-    /* ---------------------------------------------------- */
-    /* GAME CONSTANTS & RANK DEFINITIONS WITH UNIQUE COLORS  */
-    /* ---------------------------------------------------- */
-    const RANKS = [
-      // BRONZE DIVISION (Warm Copper / Bronze #d97706)
-      { id: 1, name: "Bronze III", division: "BRONZE", color: "#d97706", reqRP: 0, payout: 10 },
-      { id: 2, name: "Bronze II", division: "BRONZE", color: "#d97706", reqRP: 100, payout: 25 },
-      { id: 3, name: "Bronze I", division: "BRONZE", color: "#d97706", reqRP: 300, payout: 50 },
-
-      // SILVER DIVISION (Chrome Silver #cbd5e1)
-      { id: 4, name: "Silver III", division: "SILVER", color: "#cbd5e1", reqRP: 750, payout: 120 },
-      { id: 5, name: "Silver II", division: "SILVER", color: "#cbd5e1", reqRP: 1500, payout: 250 },
-      { id: 6, name: "Silver I", division: "SILVER", color: "#cbd5e1", reqRP: 3000, payout: 500 },
-
-      // GOLD DIVISION (Imperial Gold #f59e0b)
-      { id: 7, name: "Gold III", division: "GOLD", color: "#f59e0b", reqRP: 6000, payout: 1000 },
-      { id: 8, name: "Gold II", division: "GOLD", color: "#f59e0b", reqRP: 12000, payout: 2000 },
-      { id: 9, name: "Gold I", division: "GOLD", color: "#f59e0b", reqRP: 25000, payout: 4000 },
-
-      // PLATINUM DIVISION (Teal Platinum #2dd4bf)
-      { id: 10, name: "Platinum III", division: "PLATINUM", color: "#2dd4bf", reqRP: 50000, payout: 8500 },
-      { id: 11, name: "Platinum II", division: "PLATINUM", color: "#2dd4bf", reqRP: 100000, payout: 17500 },
-      { id: 12, name: "Platinum I", division: "PLATINUM", color: "#2dd4bf", reqRP: 200000, payout: 35000 },
-
-      // DIAMOND DIVISION (Sky Diamond #38bdf8)
-      { id: 13, name: "Diamond III", division: "DIAMOND", color: "#38bdf8", reqRP: 400000, payout: 75000 },
-      { id: 14, name: "Diamond II", division: "DIAMOND", color: "#38bdf8", reqRP: 800000, payout: 150000 },
-      { id: 15, name: "Diamond I", division: "DIAMOND", color: "#38bdf8", reqRP: 1500000, payout: 300000 },
-
-      // MASTER DIVISION (Void Purple #c084fc)
-      { id: 16, name: "Master III", division: "MASTER", color: "#c084fc", reqRP: 3000000, payout: 600000 },
-      { id: 17, name: "Master II", division: "MASTER", color: "#c084fc", reqRP: 6000000, payout: 1250000 },
-      { id: 18, name: "Master I", division: "MASTER", color: "#c084fc", reqRP: 12000000, payout: 2500000 },
-
-      // GRANDMASTER DIVISION (Crimson GM #f43f5e)
-      { id: 19, name: "Grandmaster III", division: "GRANDMASTER", color: "#f43f5e", reqRP: 25000000, payout: 5000000 },
-      { id: 20, name: "Grandmaster II", division: "GRANDMASTER", color: "#f43f5e", reqRP: 50000000, payout: 10000000 },
-      { id: 21, name: "Grandmaster I", division: "GRANDMASTER", color: "#f43f5e", reqRP: 100000000, payout: 20000000 },
-
-      // CHAMPION DIVISION (Emerald Champion #10b981)
-      { id: 22, name: "Champion III", division: "CHAMPION", color: "#10b981", reqRP: 250000000, payout: 50000000 },
-      { id: 23, name: "Champion II", division: "CHAMPION", color: "#10b981", reqRP: 500000000, payout: 100000000 },
-      { id: 24, name: "Champion I", division: "CHAMPION", color: "#10b981", reqRP: 1000000000, payout: 250000000 },
-
-      // LEGEND DIVISION (Radiant Sunburst Gold #fbbf24)
-      { id: 25, name: "Legend III", division: "LEGEND", color: "#fbbf24", reqRP: 2500000000, payout: 600000000 },
-      { id: 26, name: "Legend II", division: "LEGEND", color: "#fbbf24", reqRP: 5000000000, payout: 1500000000 },
-      { id: 27, name: "Legend I", division: "LEGEND", color: "#fbbf24", reqRP: 10000000000, payout: 5000000000 }
-    ];
-
-    const UPGRADES_DEF = [
-      { id: "click_1", name: "Tactile Switches", cat: "CLICK", baseCost: 15, costMult: 1.15, effectValue: 1, desc: "+1 Click Power" },
-      { id: "click_2", name: "Optical Sensors", cat: "CLICK", baseCost: 100, costMult: 1.18, effectValue: 5, desc: "+5 Click Power" },
-      { id: "click_3", name: "Custom Micro-code", cat: "CLICK", baseCost: 750, costMult: 1.22, effectValue: 25, desc: "+25 Click Power" },
-      { id: "auto_1", name: "Macro Routine", cat: "AUTO", baseCost: 50, costMult: 1.15, effectValue: 1, desc: "+1 RP/sec" },
-      { id: "auto_2", name: "Automation Bot", cat: "AUTO", baseCost: 350, costMult: 1.18, effectValue: 8, desc: "+8 RP/sec" },
-      { id: "auto_3", name: "Server Array", cat: "AUTO", baseCost: 2500, costMult: 1.22, effectValue: 45, desc: "+45 RP/sec" },
-      { id: "payout_1", name: "Tier Sponsor", cat: "PAYOUT", baseCost: 100, costMult: 1.25, effectValue: 1.25, desc: "+25% Rank Promotion Cash" },
-      { id: "payout_2", name: "Esports Contract", cat: "PAYOUT", baseCost: 1000, costMult: 1.30, effectValue: 1.50, desc: "+50% Rank Promotion Cash" }
-    ];
-
-    /* Default Player State */
-    const DEFAULT_STATE = {
-      rp: 0,
-      cash: 0,
-      user: { email: "", gamertag: "OPERATOR", loggedIn: false },
-      upgrades: {},
-      inventory: [],
-      loadout: { mouse: null, keyboard: null, monitor: null, pc: null },
-      settings: { sound: true }
+    /* ================= INLINE VECTOR SVG ICON MAP (NO EMOJIS) ================= */
+    const SVG = {
+      trophy: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>`,
+      chart: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+      crosshair: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>`,
+      shield: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+      dollar: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+      zap: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+      settings: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      user: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+      mail: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+      lock: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+      eye: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+      eyeOff: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+      key: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>`,
+      download: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+      upload: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+      logout: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+      volumeOn: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
+      volumeOff: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M23 9l-6 6M17 9l6 6"/></svg>`,
+      box: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+      arrowRight: `<svg class="svg-ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+      crown: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-5-4 5-6-7z"/><rect x="4" y="18" width="16" height="2"/></svg>`,
+      target: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+      users: `<svg class="svg-ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"/><path d="M9 21v-2a4 4 0 0 1 3-3.87"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><circle cx="19" cy="4" r="3"/></svg>`
     };
 
-    let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-    let buyMult = 1;
-    let activeTab = "arena";
-    let activeFilter = "ALL";
-    let audioCtx = null;
+    const EMBLEM_SVGS = [SVG.zap, SVG.target, SVG.crown, SVG.shield];
 
-    /* ---------------------------------------------------- */
-    /* DATA PERSISTENCE & DEEP MERGING                       */
-    /* ---------------------------------------------------- */
-    function mergeSaveData(target, source) {
-      for (const key in source) {
-        if (source[key] !== null && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-          if (!target[key]) target[key] = {};
-          mergeSaveData(target[key], source[key]);
-        } else {
-          target[key] = source[key];
+    /* ================= NUMBER FORMATTERS ================= */
+    function formatRP(num) {
+      if (num === null || num === undefined || isNaN(num)) return '0';
+      if (num < 1000) return num % 1 === 0 ? num.toString() : num.toFixed(1);
+      const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+      const i = Math.floor(Math.log10(num) / 3);
+      if (i >= suffixes.length) return num.toExponential(2);
+      return (num / Math.pow(10, i * 3)).toFixed(2) + suffixes[i];
+    }
+
+    function formatCash(num) {
+      if (num === null || num === undefined || isNaN(num)) return '$0.00';
+      if (num < 10000) return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const suffixes = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+      const i = Math.floor(Math.log10(num) / 3);
+      if (i >= suffixes.length) return `$${num.toExponential(2)}`;
+      return `$${(num / Math.pow(10, i * 3)).toFixed(2)}${suffixes[i]}`;
+    }
+
+
+    /* ================= MONOCHROME RANK METADATA & SVG BADGES ================= */
+    const RANK_METADATA = [
+      { name: 'BRONZE', primary: '#a1a1aa', secondary: '#3f3f46', glow: 'rgba(255, 255, 255, 0.2)', textClass: 'text-zinc-300' },
+      { name: 'SILVER', primary: '#e4e4e7', secondary: '#71717a', glow: 'rgba(255, 255, 255, 0.25)', textClass: 'text-zinc-200' },
+      { name: 'GOLD', primary: '#ffffff', secondary: '#a1a1aa', glow: 'rgba(255, 255, 255, 0.35)', textClass: 'text-white' },
+      { name: 'PLATINUM', primary: '#f4f4f5', secondary: '#52525b', glow: 'rgba(255, 255, 255, 0.3)', textClass: 'text-zinc-100' },
+      { name: 'DIAMOND', primary: '#ffffff', secondary: '#71717a', glow: 'rgba(255, 255, 255, 0.4)', textClass: 'text-white font-bold' },
+      { name: 'MASTER', primary: '#d4d4d8', secondary: '#27272a', glow: 'rgba(255, 255, 255, 0.45)', textClass: 'text-zinc-200' },
+      { name: 'GRANDMASTER', primary: '#e4e4e7', secondary: '#18181b', glow: 'rgba(255, 255, 255, 0.5)', textClass: 'text-white' },
+      { name: 'CHAMPION', primary: '#ffffff', secondary: '#3f3f46', glow: 'rgba(255, 255, 255, 0.55)', textClass: 'text-white' },
+      { name: 'LEGEND', primary: '#ffffff', secondary: '#09090b', glow: 'rgba(255, 255, 255, 0.65)', textClass: 'text-white' }
+    ];
+
+    function getRankBadgeSvg(rankIndex) {
+      const meta = RANK_METADATA[rankIndex] || RANK_METADATA[0];
+      const p = meta.primary;
+      const s = meta.secondary;
+
+      const badgeSvgs = [
+        /* 0: BRONZE - Slate Obsidian Crest */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad0" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <path d="M15 45 L35 30 L30 65 L10 50 Z" fill="url(#mGrad0)" opacity="0.8"/>
+          <path d="M85 45 L65 30 L70 65 L90 50 Z" fill="url(#mGrad0)" opacity="0.8"/>
+          <polygon points="50,10 82,28 82,72 50,90 18,72 18,28" stroke="${p}" stroke-width="3" fill="#09090b"/>
+          <polygon points="50,18 74,33 74,67 50,82 26,67 26,33" fill="url(#mGrad0)" opacity="0.3" stroke="${s}" stroke-width="1.5"/>
+          <polygon points="50,30 65,50 50,70 35,50" fill="url(#mGrad0)" stroke="#ffffff" stroke-width="1.5"/>
+          <circle cx="50" cy="50" r="4" fill="#ffffff"/>
+        </svg>`,
+
+        /* 1: SILVER - Polished Chrome Crest */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <path d="M10 35 L38 25 L32 75 L12 60 Z" fill="url(#mGrad1)" opacity="0.75"/>
+          <path d="M90 35 L62 25 L68 75 L88 60 Z" fill="url(#mGrad1)" opacity="0.75"/>
+          <path d="M50 8 L85 28 V65 L50 92 L15 65 V28 Z" fill="#09090b" stroke="url(#mGrad1)" stroke-width="3.5"/>
+          <polygon points="50,20 75,50 50,80 25,50" fill="url(#mGrad1)" opacity="0.25" stroke="${p}" stroke-width="1.5"/>
+          <polygon points="50,26 66,50 50,74 34,50" fill="url(#mGrad1)"/>
+          <line x1="50" y1="26" x2="50" y2="74" stroke="#ffffff" stroke-width="1.5"/>
+        </svg>`,
+
+        /* 2: GOLD - Platinum Sunburst Crest */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#mGrad2)" stroke-width="1" stroke-dasharray="3 3"/>
+          <path d="M5 50 L25 35 L30 65 Z" fill="url(#mGrad2)"/>
+          <path d="M95 50 L75 35 L70 65 Z" fill="url(#mGrad2)"/>
+          <path d="M50 10 L82 26 V68 L50 90 L18 68 V26 Z" fill="#000000" stroke="url(#mGrad2)" stroke-width="4"/>
+          <polygon points="50,22 72,40 62,75 38,75 28,40" fill="url(#mGrad2)" opacity="0.3" stroke="${p}" stroke-width="2"/>
+          <polygon points="50,30 62,45 50,68 38,45" fill="url(#mGrad2)"/>
+          <circle cx="50" cy="48" r="5" fill="#ffffff"/>
+        </svg>`,
+
+        /* 3: PLATINUM - Silver Laser Crest */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad3" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <path d="M8 30 L38 18 L32 82 L12 65 Z" fill="url(#mGrad3)" opacity="0.6"/>
+          <path d="M92 30 L62 18 L68 82 L88 65 Z" fill="url(#mGrad3)" opacity="0.6"/>
+          <polygon points="50,6 88,27 88,73 50,94 12,73 12,27" fill="#09090b" stroke="url(#mGrad3)" stroke-width="3.5"/>
+          <polygon points="50,18 76,33 76,67 50,82 24,67 24,33" fill="none" stroke="${p}" stroke-width="2"/>
+          <polygon points="50,28 68,50 50,72 32,50" fill="url(#mGrad3)"/>
+          <line x1="12" y1="50" x2="88" y2="50" stroke="${p}" stroke-width="1.5" stroke-dasharray="2 2"/>
+        </svg>`,
+
+        /* 4: DIAMOND - Faceted Pure Diamond Shield */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="40%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <path d="M5 25 L35 15 L28 85 L10 65 Z" fill="url(#mGrad4)" opacity="0.75"/>
+          <path d="M95 25 L65 15 L72 85 L90 65 Z" fill="url(#mGrad4)" opacity="0.75"/>
+          <polygon points="50,5 90,30 50,95 10,30" fill="#000000" stroke="url(#mGrad4)" stroke-width="4"/>
+          <polygon points="50,5 90,30 50,45 10,30" fill="url(#mGrad4)" opacity="0.4"/>
+          <polygon points="50,45 90,30 50,95" fill="url(#mGrad4)" opacity="0.6"/>
+          <polygon points="50,45 10,30 50,95" fill="url(#mGrad4)" opacity="0.8"/>
+          <polygon points="50,25 58,40 75,45 58,50 50,65 42,50 25,45 42,40" fill="#ffffff"/>
+        </svg>`,
+
+        /* 5: MASTER - Titanium Shadow Crest */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <path d="M5 15 L35 25 L25 70 L5 40 Z" fill="url(#mGrad5)"/>
+          <path d="M95 15 L65 25 L75 70 L95 40 Z" fill="url(#mGrad5)"/>
+          <circle cx="50" cy="50" r="44" fill="none" stroke="url(#mGrad5)" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" fill="#09090b" stroke="url(#mGrad5)" stroke-width="3.5"/>
+          <circle cx="50" cy="50" r="24" fill="url(#mGrad5)" opacity="0.25" stroke="${p}" stroke-width="2"/>
+          <polygon points="50,22 66,38 66,62 50,78 34,62 34,38" fill="url(#mGrad5)"/>
+          <circle cx="50" cy="50" r="6" fill="#ffffff"/>
+        </svg>`,
+
+        /* 6: GRANDMASTER - Carbon Turbine Crest */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad6" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <path d="M12 20 L40 30 L25 80 L5 50 Z" fill="url(#mGrad6)"/>
+          <path d="M88 20 L60 30 L75 80 L95 50 Z" fill="url(#mGrad6)"/>
+          <polygon points="50,4 92,26 92,74 50,96 8,74 8,26" fill="#000000" stroke="url(#mGrad6)" stroke-width="4"/>
+          <circle cx="50" cy="50" r="30" fill="none" stroke="${p}" stroke-width="2" stroke-dasharray="10 4"/>
+          <polygon points="50,18 74,50 50,82 26,50" fill="url(#mGrad6)" opacity="0.4"/>
+          <polygon points="50,24 68,50 50,76 32,50" fill="url(#mGrad6)"/>
+          <polygon points="50,34 58,50 50,66 42,50" fill="#ffffff"/>
+        </svg>`,
+
+        /* 7: CHAMPION - Monochromatic Apex Crest */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad7" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <path d="M0 20 L35 12 L30 88 L5 70 Z" fill="url(#mGrad7)" opacity="0.8"/>
+          <path d="M100 20 L65 12 L70 88 L95 70 Z" fill="url(#mGrad7)" opacity="0.8"/>
+          <path d="M50 2 L94 24 V76 L50 98 L6 76 V24 Z" fill="#09090b" stroke="url(#mGrad7)" stroke-width="4"/>
+          <polygon points="50,14 82,30 82,70 50,86 18,70 18,30" fill="url(#mGrad7)" opacity="0.25" stroke="${p}" stroke-width="2"/>
+          <polygon points="50,24 70,38 70,62 50,76 30,62 30,38" fill="url(#mGrad7)"/>
+          <circle cx="50" cy="50" r="8" fill="#ffffff"/>
+        </svg>`,
+
+        /* 8: LEGEND - Celestial Obsidian Nexus */
+        `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+          <defs><linearGradient id="mGrad8" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
+          <circle cx="50" cy="50" r="46" fill="none" stroke="url(#mGrad8)" stroke-width="1.5" stroke-dasharray="4 6"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.6"/>
+          <path d="M2 15 L38 25 L28 85 L2 55 Z" fill="url(#mGrad8)"/>
+          <path d="M98 15 L62 25 L72 85 L98 55 Z" fill="url(#mGrad8)"/>
+          <polygon points="50,2 96,25 96,75 50,98 4,75 4,25" fill="#000000" stroke="url(#mGrad8)" stroke-width="4.5"/>
+          <polygon points="50,12 62,35 88,50 62,65 50,88 38,65 12,50 38,35" fill="url(#mGrad8)"/>
+          <polygon points="50,24 57,41 74,50 57,59 50,76 43,59 26,50 43,41" fill="#ffffff"/>
+          <circle cx="50" cy="50" r="6" fill="${p}"/>
+        </svg>`
+      ];
+
+      return badgeSvgs[rankIndex] || badgeSvgs[0];
+    }
+
+    /* ================= RANK BACKDROP VECTOR PATTERNS ================= */
+    function getRankBackdropSvg(rankIndex) {
+      const meta = RANK_METADATA[rankIndex] || RANK_METADATA[0];
+      const p = meta.primary;
+
+      const backdrops = [
+        `<svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <pattern id="bgHex" width="20" height="20" patternUnits="userSpaceOnUse">
+            <polygon points="10,0 20,5 20,15 10,20 0,15 0,5" fill="none" stroke="${p}" stroke-width="0.5" opacity="0.25"/>
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#bgHex)"/>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <pattern id="bgLat" width="16" height="16" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="16" y2="16" stroke="${p}" stroke-width="0.5" opacity="0.3"/>
+            <line x1="16" y1="0" x2="0" y2="16" stroke="${p}" stroke-width="0.5" opacity="0.3"/>
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#bgLat)"/>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100">
+          <g stroke="${p}" stroke-width="0.4" opacity="0.25">
+            <circle cx="50" cy="50" r="10" fill="none"/>
+            <circle cx="50" cy="50" r="25" fill="none"/>
+            <circle cx="50" cy="50" r="40" fill="none"/>
+            <line x1="0" y1="0" x2="100" y2="100"/>
+            <line x1="100" y1="0" x2="0" y2="100"/>
+            <line x1="50" y1="0" x2="50" y2="100"/>
+            <line x1="0" y1="50" x2="100" y2="50"/>
+          </g>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <pattern id="bgCy" width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="none" stroke="${p}" stroke-width="0.4" opacity="0.25"/>
+            <circle cx="5" cy="5" r="1" fill="${p}" opacity="0.4"/>
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#bgCy)"/>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <pattern id="bgDia" width="20" height="20" patternUnits="userSpaceOnUse">
+            <polygon points="10,0 20,10 10,20 0,10" fill="none" stroke="${p}" stroke-width="0.5" opacity="0.3"/>
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#bgDia)"/>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <pattern id="bgMst" width="25" height="25" patternUnits="userSpaceOnUse">
+            <path d="M0 12.5 H25 M12.5 0 V25 M0 0 L25 25" stroke="${p}" stroke-width="0.5" opacity="0.25"/>
+            <circle cx="12.5" cy="12.5" r="3" fill="none" stroke="${p}" opacity="0.5"/>
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#bgMst)"/>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100">
+          <g stroke="${p}" stroke-width="0.5" opacity="0.3" fill="none">
+            <circle cx="50" cy="50" r="15"/>
+            <circle cx="50" cy="50" r="32" stroke-dasharray="4 4"/>
+            <path d="M50 5 L50 95 M5 50 L95 50 M18 18 L82 82 M82 18 L18 82"/>
+          </g>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <pattern id="bgChm" width="12" height="24" patternUnits="userSpaceOnUse">
+            <line x1="6" y1="0" x2="6" y2="24" stroke="${p}" stroke-width="0.5" stroke-dasharray="6 6" opacity="0.35"/>
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#bgChm)"/>
+        </svg>`,
+        `<svg class="w-full h-full" viewBox="0 0 100 100">
+          <g stroke="${p}" stroke-width="0.6" opacity="0.35" fill="none">
+            <circle cx="50" cy="50" r="8"/>
+            <circle cx="50" cy="50" r="22"/>
+            <circle cx="50" cy="50" r="38"/>
+            <polygon points="50,2 62,38 98,50 62,62 50,98 38,62 2,50 38,38"/>
+          </g>
+        </svg>`
+      ];
+
+      return backdrops[rankIndex] || backdrops[0];
+    }
+
+    const TIERS_SUB = ['III', 'II', 'I'];
+    const RANK_TIERS = [];
+    let tIdx = 0;
+    RANK_METADATA.forEach((meta, rIdx) => {
+      TIERS_SUB.forEach((sub) => {
+        const rpReq = tIdx === 0 ? 0 : Math.floor(100 * Math.pow(2.15, tIdx));
+        const baseCashPayout = Math.floor(25 * Math.pow(2.0, tIdx));
+        RANK_TIERS.push({
+          index: tIdx,
+          rankIndex: rIdx,
+          rankName: meta.name,
+          tierSub: sub,
+          fullName: `${meta.name} ${sub}`,
+          rpReq: rpReq,
+          baseCashPayout: baseCashPayout
+        });
+        tIdx++;
+      });
+    });
+
+
+    /* ================= STORE CONFIGURATION ================= */
+    const STORE_CONFIG = [
+      { id: 'c1', cat: 'click', name: 'Micro Reflex', desc: '+1 Base RP per Click', baseCost: 10, val: 1, count: 0, iconSvg: SVG.target },
+      { id: 'c2', cat: 'click', name: 'Macro Trigger', desc: '+8 Base RP per Click', baseCost: 75, val: 8, count: 0, iconSvg: SVG.crosshair },
+      { id: 'c3', cat: 'click', name: 'Synergy Strike', desc: '+45 Base RP per Click', baseCost: 500, val: 45, count: 0, iconSvg: SVG.zap },
+      { id: 'c4', cat: 'click', name: 'Apex Tap', desc: '+250 Base RP per Click', baseCost: 3500, val: 250, count: 0, iconSvg: SVG.crown },
+
+      { id: 'prp1', cat: 'prp', name: 'Queue Drone', desc: '+0.5 RP / sec', baseCost: 15, val: 0.5, count: 0, iconSvg: SVG.box },
+      { id: 'prp2', cat: 'prp', name: 'Scrim Bot', desc: '+4.0 RP / sec', baseCost: 120, val: 4.0, count: 0, iconSvg: SVG.shield },
+      { id: 'prp3', cat: 'prp', name: 'Analyst Rig', desc: '+30.0 RP / sec', baseCost: 950, val: 30.0, count: 0, iconSvg: SVG.chart },
+      { id: 'prp4', cat: 'prp', name: 'AI Server Array', desc: '+200.0 RP / sec', baseCost: 6500, val: 200.0, count: 0, iconSvg: SVG.zap },
+
+      { id: 'pcash1', cat: 'pcash', name: 'Sponsorship Stream', desc: '+$0.25 Cash / sec', baseCost: 30, val: 0.25, count: 0, iconSvg: SVG.dollar },
+      { id: 'pcash2', cat: 'pcash', name: 'Content Revenue', desc: '+$2.00 Cash / sec', baseCost: 220, val: 2.00, count: 0, iconSvg: SVG.dollar },
+      { id: 'pcash3', cat: 'pcash', name: 'Pro Team Contract', desc: '+$15.00 Cash / sec', baseCost: 1500, val: 15.00, count: 0, iconSvg: SVG.trophy },
+
+      { id: 'perk_payout', cat: 'perks', name: 'Tier Cash Boost', desc: '+25% Cash awarded on Tier promotions', baseCost: 60, val: 0.25, count: 0, iconSvg: SVG.dollar },
+      { id: 'perk_global', cat: 'perks', name: 'Overclock Engine', desc: '+15% Global RP Gain Multiplier', baseCost: 400, val: 0.15, count: 0, iconSvg: SVG.zap }
+    ];
+
+    /* ================= CRATES & EQUIPMENT DATABASE ================= */
+    const CRATES_CONFIG = [
+      { id: 'crate_mouse', name: 'COMMON MOUSE CRATE', slot: 'mouse', cost: 500, desc: 'Contains Gaming Mouses boosting Click RP Yield', iconSvg: SVG.target },
+      { id: 'crate_keyboard', name: 'COMMON KEYBOARD CRATE', slot: 'keyboard', cost: 1200, desc: 'Contains Keyboards boosting Auto RP/s & Click Mults', iconSvg: SVG.key },
+      { id: 'crate_monitor', name: 'COMMON MONITOR CRATE', slot: 'monitor', cost: 3000, desc: 'Contains High-Hz Monitors boosting Tier Cash Payouts', iconSvg: SVG.chart },
+      { id: 'crate_pc', name: 'COMMON PC BUILD CRATE', slot: 'pc', cost: 10000, desc: 'Contains Custom PC Rigs boosting RPPS & Cash Yields', iconSvg: SVG.zap }
+    ];
+
+    const ITEMS_DATABASE = {
+      mouse: [
+        { id: 'm1', name: 'Standard Office Mouse', rarity: 'Common', statText: '+2 Click RP', bonus: { clickPower: 2 }, value: 150, iconSvg: SVG.target },
+        { id: 'm2', name: 'Ergonomic Optical Mouse', rarity: 'Common', statText: '+5 Click RP', bonus: { clickPower: 5 }, value: 250, iconSvg: SVG.target },
+        { id: 'm3', name: 'Tactile Esports Mouse', rarity: 'Uncommon', statText: '+15 Click RP', bonus: { clickPower: 15 }, value: 600, iconSvg: SVG.target },
+        { id: 'm4', name: 'Carbon Fiber Ultra Mouse', rarity: 'Rare', statText: '+45 Click RP', bonus: { clickPower: 45 }, value: 1800, iconSvg: SVG.target },
+        { id: 'm5', name: 'Magnesium Wireless Mouse', rarity: 'Epic', statText: '+150 Click RP', bonus: { clickPower: 150 }, value: 5000, iconSvg: SVG.target },
+        { id: 'm6', name: 'Zero-G Quantum Mouse', rarity: 'Legendary', statText: '+500 Click RP', bonus: { clickPower: 500 }, value: 15000, iconSvg: SVG.target }
+      ],
+      keyboard: [
+        { id: 'k1', name: 'Rubber Dome Board', rarity: 'Common', statText: '+1.0 RP/s', bonus: { passiveRps: 1.0 }, value: 350, iconSvg: SVG.key },
+        { id: 'k2', name: 'Tactile Mechanical Board', rarity: 'Common', statText: '+3.0 RP/s', bonus: { passiveRps: 3.0 }, value: 600, iconSvg: SVG.key },
+        { id: 'k3', name: 'Hot-Swap Speed Board', rarity: 'Uncommon', statText: '+12.0 RP/s', bonus: { passiveRps: 12.0 }, value: 1400, iconSvg: SVG.key },
+        { id: 'k4', name: 'Custom Gasket Board', rarity: 'Rare', statText: '+40.0 RP/s & +10% Click', bonus: { passiveRps: 40.0, clickMult: 0.10 }, value: 4000, iconSvg: SVG.key },
+        { id: 'k5', name: 'Hall-Effect Magnetic Board', rarity: 'Epic', statText: '+150.0 RP/s & +25% Click', bonus: { passiveRps: 150.0, clickMult: 0.25 }, value: 12000, iconSvg: SVG.key },
+        { id: 'k6', name: 'Opto-Mechanical Pro Board', rarity: 'Legendary', statText: '+600.0 RP/s & +50% Click', bonus: { passiveRps: 600.0, clickMult: 0.50 }, value: 35000, iconSvg: SVG.key }
+      ],
+      monitor: [
+        { id: 'mon1', name: '60Hz Office Monitor', rarity: 'Common', statText: '+10% Promotion Cash', bonus: { cashBoost: 0.10 }, value: 900, iconSvg: SVG.chart },
+        { id: 'mon2', name: '144Hz Gaming Display', rarity: 'Common', statText: '+25% Promotion Cash', bonus: { cashBoost: 0.25 }, value: 1600, iconSvg: SVG.chart },
+        { id: 'mon3', name: '240Hz Curved Panel', rarity: 'Uncommon', statText: '+50% Promotion Cash', bonus: { cashBoost: 0.50 }, value: 4000, iconSvg: SVG.chart },
+        { id: 'mon4', name: '360Hz Ultrawide OLED', rarity: 'Rare', statText: '+100% Promotion Cash', bonus: { cashBoost: 1.00 }, value: 10000, iconSvg: SVG.chart },
+        { id: 'mon5', name: 'Dual 4K QD-OLED Array', rarity: 'Epic', statText: '+250% Promotion Cash', bonus: { cashBoost: 2.50 }, value: 28000, iconSvg: SVG.chart },
+        { id: 'mon6', name: 'Holographic Display Rig', rarity: 'Legendary', statText: '+600% Promotion Cash', bonus: { cashBoost: 6.00 }, value: 85000, iconSvg: SVG.chart }
+      ],
+      pc: [
+        { id: 'pc1', name: 'Prebuilt Office Rig', rarity: 'Common', statText: '+$2.0 Cash/s & +10 RP/s', bonus: { passiveCps: 2.0, passiveRps: 10 }, value: 3000, iconSvg: SVG.zap },
+        { id: 'pc2', name: 'Mid-Tower Gaming Rig', rarity: 'Common', statText: '+$8.0 Cash/s & +30 RP/s', bonus: { passiveCps: 8.0, passiveRps: 30 }, value: 6000, iconSvg: SVG.zap },
+        { id: 'pc3', name: 'Liquid Cooled Workstation', rarity: 'Uncommon', statText: '+$25.0 Cash/s & +100 RP/s', bonus: { passiveCps: 25.0, passiveRps: 100 }, value: 15000, iconSvg: SVG.zap },
+        { id: 'pc4', name: 'Dual RTX Custom Rig', rarity: 'Rare', statText: '+$80.0 Cash/s & +350 RP/s', bonus: { passiveCps: 80.0, passiveRps: 350 }, value: 45000, iconSvg: SVG.zap },
+        { id: 'pc5', name: 'Cryo-Cooled Supercomputer', rarity: 'Epic', statText: '+$250.0 Cash/s & +1.2K RP/s', bonus: { passiveCps: 250.0, passiveRps: 1200 }, value: 120000, iconSvg: SVG.zap },
+        { id: 'pc6', name: 'Quantum Neural Cluster', rarity: 'Legendary', statText: '+$1.0K Cash/s & +5.0K RP/s', bonus: { passiveCps: 1000.0, passiveRps: 5000 }, value: 400000, iconSvg: SVG.zap }
+      ]
+    };
+
+    /* ================= SIMULATED GLOBAL LEADERBOARD DATA ================= */
+    const LEADERBOARD_SEED = [
+      { tag: 'VORTEX_APEX', rp: 8500000, tier: 'LEGEND I', avatar: 2 },
+      { tag: 'PHANTOM_X', rp: 5200000, tier: 'CHAMPION I', avatar: 0 },
+      { tag: 'CYBER_ZERO', rp: 3100000, tier: 'CHAMPION II', avatar: 1 },
+      { tag: 'AURA_PRIME', rp: 1800000, tier: 'GRANDMASTER I', avatar: 3 },
+      { tag: 'NIGHT_HAWK', rp: 950000, tier: 'MASTER I', avatar: 0 },
+      { tag: 'QUANTUM_VIP', rp: 420000, tier: 'DIAMOND I', avatar: 1 },
+      { tag: 'NEO_BLADE', rp: 180000, tier: 'PLATINUM I', avatar: 2 }
+    ];
+
+
+    /* ================= FORWARD COMPATIBLE DEEP MERGE HELPERS ================= */
+    function deepMergeSave(target, source) {
+      if (!source) return target;
+      for (const key of Object.keys(target)) {
+        if (key in source) {
+          if (Array.isArray(target[key]) && Array.isArray(source[key])) {
+            if (key === 'upgrades') {
+              target[key].forEach(u => {
+                const matched = source[key].find(su => su.id === u.id);
+                if (matched && matched.count !== undefined) u.count = matched.count;
+              });
+            } else {
+              target[key] = source[key];
+            }
+          } else if (typeof target[key] === 'object' && target[key] !== null && typeof source[key] === 'object') {
+            deepMergeSave(target[key], source[key]);
+          } else {
+            target[key] = source[key];
+          }
         }
       }
       return target;
     }
 
-    function saveState() {
-      try {
-        localStorage.setItem("RANKED_CLICKER_SAVE_V8", JSON.stringify(state));
-      } catch (e) {
-        console.error("Save failed", e);
-      }
-    }
 
-    function loadState() {
-      const raw = localStorage.getItem("RANKED_CLICKER_SAVE_V8");
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          state = mergeSaveData(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
-        } catch (e) {
-          console.error("Failed to parse save", e);
+    /* ================= SOUND SYNTHESIZER ENGINE ================= */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
         }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
       }
-    }
-
-    /* ---------------------------------------------------- */
-    /* AUDIO SYNTHESIZER ENGINE                             */
-    /* ---------------------------------------------------- */
-    function playSound(type) {
-      if (!state.settings.sound) return;
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+      playUiClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        const now = audioCtx.currentTime;
-
-        if (type === 'click') {
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      }
+      playCoreClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.04);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+      }
+      playBuy() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(500, now);
+        osc.frequency.setValueAtTime(750, now + 0.03);
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      }
+      playReelTick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(950, now);
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.015);
+      }
+      playCrateWin() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [600, 800, 1000, 1200].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(440, now);
-          osc.frequency.exponentialRampToValueAtTime(110, now + 0.05);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-          osc.start(now);
-          osc.stop(now + 0.05);
-        } else if (type === 'buy') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.setValueAtTime(659.25, now + 0.05);
-          gain.gain.setValueAtTime(0.12, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-          osc.start(now);
-          osc.stop(now + 0.12);
-        } else if (type === 'tick') {
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(800, now);
-          gain.gain.setValueAtTime(0.03, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
-          osc.start(now);
-          osc.stop(now + 0.02);
-        } else if (type === 'promo') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(440, now);
-          osc.frequency.setValueAtTime(554.37, now + 0.1);
-          osc.frequency.setValueAtTime(659.25, now + 0.2);
-          gain.gain.setValueAtTime(0.2, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-          osc.start(now);
-          osc.stop(now + 0.4);
+          osc.frequency.setValueAtTime(freq, now + i * 0.05);
+          gain.gain.setValueAtTime(0.06, now + i * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.05);
+          osc.stop(now + i * 0.05 + 0.2);
+        });
+      }
+      playFanfare() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.06);
+          gain.gain.setValueAtTime(0.07, now + i * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.06);
+          osc.stop(now + i * 0.06 + 0.25);
+        });
+      }
+    }
+
+
+    /* ================= MAIN GAME CONTROLLER CLASS ================= */
+    class Game {
+      constructor() {
+        this.sound = new SoundEngine();
+
+        this.defaultData = {
+          email: 'operator@league.com',
+          gamertag: 'OPERATOR',
+          passwordHash: '',
+          avatarId: 0,
+          rp: 0,
+          cash: 0,
+          lifetimeCash: 0,
+          totalClicks: 0,
+          currentTierIndex: 0,
+          highestTierIndex: 0,
+          promotionsCount: 0,
+          startTime: Date.now(),
+          lastSaveTime: Date.now(),
+          upgrades: JSON.parse(JSON.stringify(STORE_CONFIG)),
+          equipped: { mouse: null, keyboard: null, monitor: null, pc: null },
+          inventory: [],
+          settings: { sound: true }
+        };
+
+        this.state = JSON.parse(JSON.stringify(this.defaultData));
+        this.storeCategory = 'all';
+        this.buyMultiplier = 1;
+
+        this.clickPower = 1;
+        this.passiveRps = 0;
+        this.passiveCps = 0;
+        this.cashMultiplier = 1.0;
+        this.isRollingCrate = false;
+        this.pendingCrateItem = null;
+
+        this.loadGameData();
+        this.calculateStats();
+        this.applyRankTheme();
+      }
+
+      getCurrentTier() {
+        return RANK_TIERS[this.state.currentTierIndex] || RANK_TIERS[0];
+      }
+
+      getNextTier() {
+        return RANK_TIERS[this.state.currentTierIndex + 1] || null;
+      }
+
+      applyRankTheme() {
+        const curTier = this.getCurrentTier();
+        const meta = RANK_METADATA[curTier.rankIndex] || RANK_METADATA[0];
+
+        document.documentElement.style.setProperty('--rank-primary', meta.primary);
+        document.documentElement.style.setProperty('--rank-secondary', meta.secondary);
+        document.documentElement.style.setProperty('--rank-glow-color', meta.glow);
+
+        const badgeSvg = getRankBadgeSvg(curTier.rankIndex);
+        const backdropSvg = getRankBackdropSvg(curTier.rankIndex);
+
+        document.getElementById('headerRankSvg').innerHTML = badgeSvg;
+        document.getElementById('menuCrestIcon').innerHTML = badgeSvg;
+        document.getElementById('dashRankIcon').innerHTML = badgeSvg;
+        document.getElementById('coreEmblemIcon').innerHTML = badgeSvg;
+
+        document.getElementById('arenaBackdropSvg').innerHTML = backdropSvg;
+        document.getElementById('arenaDynamicPattern').innerHTML = backdropSvg;
+        document.getElementById('coreButtonPattern').innerHTML = backdropSvg;
+
+        document.getElementById('headerRankSub').innerText = curTier.fullName;
+        document.getElementById('dashRankName').className = `text-xs sm:text-sm font-display font-extrabold tracking-wider uppercase truncate block ${meta.textClass}`;
+      }
+
+      calculateStats() {
+        let baseClick = 1;
+        let clickMult = 1.0;
+        let baseRps = 0;
+        let baseCps = 0;
+        let rpMult = 1.0;
+        let cashBoostPct = 0;
+
+        // 1. Upgrades Matrix
+        this.state.upgrades.forEach(u => {
+          if (u.cat === 'click') baseClick += u.val * u.count;
+          if (u.cat === 'prp') baseRps += u.val * u.count;
+          if (u.cat === 'pcash') baseCps += u.val * u.count;
+          if (u.id === 'perk_global') rpMult += u.val * u.count;
+          if (u.id === 'perk_payout') cashBoostPct += u.val * u.count;
+        });
+
+        // 2. Equipped Loadout Hardware
+        Object.keys(this.state.equipped).forEach(slot => {
+          const item = this.state.equipped[slot];
+          if (item && item.bonus) {
+            if (item.bonus.clickPower) baseClick += item.bonus.clickPower;
+            if (item.bonus.clickMult) clickMult += item.bonus.clickMult;
+            if (item.bonus.passiveRps) baseRps += item.bonus.passiveRps;
+            if (item.bonus.passiveCps) baseCps += item.bonus.passiveCps;
+            if (item.bonus.cashBoost) cashBoostPct += item.bonus.cashBoost;
+          }
+        });
+
+        this.clickPower = baseClick * clickMult * rpMult;
+        this.passiveRps = baseRps * rpMult;
+        this.passiveCps = baseCps;
+        this.cashMultiplier = 1.0 + cashBoostPct;
+      }
+
+      clickCore(e) {
+        const yieldRp = this.clickPower;
+        this.state.rp += yieldRp;
+        this.state.totalClicks++;
+
+        this.sound.playCoreClick();
+
+        let x = window.innerWidth / 2;
+        let y = window.innerHeight / 2;
+        if (e && e.clientX && e.clientY) {
+          x = e.clientX;
+          y = e.clientY;
+        } else {
+          const rect = document.getElementById('clickCoreBtn').getBoundingClientRect();
+          x = rect.left + rect.width / 2;
+          y = rect.top + rect.height / 2;
         }
-      } catch (e) {}
-    }
 
-    /* ---------------------------------------------------- */
-    /* HELPER CALCULATIONS                                  */
-    /* ---------------------------------------------------- */
-    function getRankInfo(rp) {
-      let activeRank = RANKS[0];
-      for (let i = RANKS.length - 1; i >= 0; i--) {
-        if (rp >= RANKS[i].reqRP) {
-          activeRank = RANKS[i];
-          break;
+        this.spawnCleanFloatText(x, y, `+${formatRP(yieldRp)} RP`);
+        this.checkAutomaticPromotion();
+        this.updateUI();
+      }
+
+      spawnCleanFloatText(x, y, text) {
+        const el = document.createElement('div');
+        el.className = 'float-text-clean text-xs font-mono font-bold';
+        el.innerText = text;
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 650);
+      }
+
+      checkAutomaticPromotion() {
+        let nextTier = this.getNextTier();
+        let promoted = false;
+        let lastPromotedTier = null;
+        let totalRewardEarned = 0;
+
+        while (nextTier && this.state.rp >= nextTier.rpReq) {
+          this.state.currentTierIndex++;
+          this.state.promotionsCount++;
+          if (this.state.currentTierIndex > this.state.highestTierIndex) {
+            this.state.highestTierIndex = this.state.currentTierIndex;
+          }
+
+          const tierData = RANK_TIERS[this.state.currentTierIndex];
+          let payout = tierData.baseCashPayout * this.cashMultiplier;
+
+          this.state.cash += payout;
+          this.state.lifetimeCash += payout;
+          totalRewardEarned += payout;
+          promoted = true;
+          lastPromotedTier = tierData;
+
+          nextTier = this.getNextTier();
+        }
+
+        if (promoted && lastPromotedTier) {
+          this.applyRankTheme();
+          this.sound.playFanfare();
+          this.showPromotionModal(lastPromotedTier, totalRewardEarned);
+          this.renderUpgrades();
+          this.renderLadder();
+          this.renderLeaderboard();
         }
       }
-      const nextRank = RANKS.find(r => r.reqRP > rp) || null;
-      return { activeRank, nextRank };
-    }
 
-    function getClickPower() {
-      let base = 1 + (state.upgrades['click_1'] || 0) * 1 + (state.upgrades['click_2'] || 0) * 5 + (state.upgrades['click_3'] || 0) * 25;
-      if (state.loadout.mouse) base += state.loadout.mouse.clickBonus || 0;
-      return base;
-    }
+      showPromotionModal(tierData, payout) {
+        const modal = document.getElementById('promoModal');
+        document.getElementById('modalPromoTitle').innerText = `PROMOTED TO ${tierData.fullName}`;
+        document.getElementById('modalPromoCash').innerText = formatCash(payout);
+        document.getElementById('modalPromoSvg').innerHTML = getRankBadgeSvg(tierData.rankIndex);
 
-    function getAutoRP() {
-      let base = (state.upgrades['auto_1'] || 0) * 1 + (state.upgrades['auto_2'] || 0) * 8 + (state.upgrades['auto_3'] || 0) * 45;
-      if (state.loadout.keyboard) base += state.loadout.keyboard.autoBonus || 0;
-      return base;
-    }
-
-    function getPayoutMultiplier() {
-      let mult = 1 + (state.upgrades['payout_1'] || 0) * 0.25 + (state.upgrades['payout_2'] || 0) * 0.50;
-      if (state.loadout.monitor) mult += state.loadout.monitor.payoutBonus || 0;
-      return mult;
-    }
-
-    function formatNumber(num) {
-      if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-      if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-      if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
-      return Math.floor(num).toLocaleString();
-    }
-
-    /* ---------------------------------------------------- */
-    /* SVG ICON GENERATORS FOR RANKS                        */
-    /* ---------------------------------------------------- */
-    function getRankSVG(division, color) {
-      return `
-        <svg class="w-full h-full drop-shadow" viewBox="0 0 100 100" fill="none">
-          <polygon points="50,10 85,25 85,75 50,90 15,75 15,25" fill="#18181b" stroke="${color}" stroke-width="4"/>
-          <polygon points="50,20 75,32 75,68 50,80 25,68 25,32" fill="#09090b" stroke="${color}" stroke-width="2" opacity="0.8"/>
-          <circle cx="50" cy="50" r="14" fill="${color}"/>
-          <path d="M50 25 L65 50 L50 75 L35 50 Z" fill="white" opacity="0.3"/>
-        </svg>
-      `;
-    }
-
-    /* ---------------------------------------------------- */
-    /* CORE ACTIONS & CLICKING                              */
-    /* ---------------------------------------------------- */
-    function handleCoreClick(e) {
-      const power = getClickPower();
-      const prevRP = state.rp;
-      state.rp += power;
-
-      playSound('click');
-      checkRankPromotion(prevRP, state.rp);
-      renderUI();
-      saveState();
-
-      // Spawn CSS Floating Yield Text
-      spawnFloatText(e, `+${formatNumber(power)} RP`);
-    }
-
-    function spawnFloatText(e, text) {
-      const container = document.getElementById('float-container');
-      const rect = container.getBoundingClientRect();
-      const el = document.createElement('div');
-
-      const x = e.clientX ? (e.clientX - rect.left) : (rect.width / 2);
-      const y = e.clientY ? (e.clientY - rect.top) : (rect.height / 2);
-
-      el.className = 'absolute font-mono font-bold text-sm text-white pointer-events-none animate-float';
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.innerText = text;
-
-      container.appendChild(el);
-      setTimeout(() => el.remove(), 750);
-    }
-
-    function checkRankPromotion(prevRP, newRP) {
-      const oldRank = getRankInfo(prevRP).activeRank;
-      const newRank = getRankInfo(newRP).activeRank;
-
-      if (newRank.id > oldRank.id) {
-        // Promoted!
-        const cashAward = newRank.payout * getPayoutMultiplier();
-        state.cash += cashAward;
-        playSound('promo');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.children[0].classList.remove('scale-95');
+        modal.children[0].classList.add('scale-100');
       }
-    }
 
-    // Spacebar Key Action
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && activeTab === 'arena' && !state.user.loggedIn) {
-        const btn = document.getElementById('main-click-btn');
-        if (btn) btn.click();
+      getUpgradeCostData(u, amount) {
+        let totalCost = 0;
+        let count = amount;
+
+        if (amount === 'max') {
+          count = 0;
+          let tempCash = this.state.cash;
+          let tempCost = Math.floor(u.baseCost * Math.pow(1.15, u.count));
+          while (tempCash >= tempCost) {
+            tempCash -= tempCost;
+            totalCost += tempCost;
+            count++;
+            tempCost = Math.floor(u.baseCost * Math.pow(1.15, u.count + count));
+            if (count >= 1000) break;
+          }
+          return { cost: totalCost, count: Math.max(1, count) };
+        }
+
+        for (let i = 0; i < amount; i++) {
+          totalCost += Math.floor(u.baseCost * Math.pow(1.15, u.count + i));
+        }
+        return { cost: totalCost, count: amount };
       }
-    });
 
-    /* ---------------------------------------------------- */
-    /* UPGRADES ENGINE                                      */
-    /* ---------------------------------------------------- */
-    function setBuyMult(m) {
-      buyMult = m;
-      renderUpgrades();
-    }
+      buyUpgrade(id) {
+        const u = this.state.upgrades.find(x => x.id === id);
+        if (!u) return;
 
-    function filterUpgrades(cat) {
-      activeFilter = cat;
-      ['ALL', 'CLICK', 'AUTO', 'PAYOUT'].forEach(c => {
-        const btn = document.getElementById(`filter-upg-${c}`);
-        if (btn) {
-          if (c === cat) {
-            btn.className = "px-3 py-1.5 rounded font-semibold bg-white text-black";
-          } else {
-            btn.className = "px-3 py-1.5 rounded font-semibold bg-zinc-800 text-zinc-300 hover:text-white";
+        const buyData = this.getUpgradeCostData(u, this.buyMultiplier);
+        if (this.state.cash >= buyData.cost && buyData.cost > 0) {
+          this.state.cash -= buyData.cost;
+          u.count += buyData.count;
+
+          this.calculateStats();
+          this.sound.playBuy();
+          this.updateUI();
+          this.renderUpgrades();
+        }
+      }
+
+      /* ================= CRATE OPENING REEL ANIMATION ENGINE ================= */
+      openCrate(crateId) {
+        if (this.isRollingCrate) return;
+        const crate = CRATES_CONFIG.find(c => c.id === crateId);
+        if (!crate || this.state.cash < crate.cost) return;
+
+        this.state.cash -= crate.cost;
+        this.isRollingCrate = true;
+        this.sound.playBuy();
+        this.updateUI();
+
+        const pool = ITEMS_DATABASE[crate.slot];
+        if (!pool) return;
+
+        // Determine Winning Item based on weighted probability
+        const winningItem = this.pickWeightedCrateItem(pool);
+        this.pendingCrateItem = winningItem;
+
+        // Generate 50 items reel track for smooth scrolling animation
+        const reelItems = [];
+        for (let i = 0; i < 45; i++) {
+          reelItems.push(pool[Math.floor(Math.random() * pool.length)]);
+        }
+        const winIndex = 38; // Winning item fixed at card index 38
+        reelItems[winIndex] = winningItem;
+        for (let i = 46; i < 50; i++) {
+          reelItems.push(pool[Math.floor(Math.random() * pool.length)]);
+        }
+
+        // Setup Modal UI
+        const modal = document.getElementById('crateRollModal');
+        const track = document.getElementById('crateReelTrack');
+        const resultPanel = document.getElementById('crateResultPanel');
+        document.getElementById('crateRollTitle').innerText = `OPENING ${crate.name}`;
+
+        resultPanel.classList.add('hidden');
+        track.className = 'flex items-center gap-2 absolute left-0';
+        track.style.transform = 'translateX(0px)';
+        track.innerHTML = '';
+
+        reelItems.forEach((item, idx) => {
+          const card = document.createElement('div');
+          card.className = `w-20 h-24 rounded-lg bg-zinc-900 border ${this.getRarityBorderClass(item.rarity)} flex-shrink-0 flex flex-col items-center justify-center p-1 font-mono text-center relative`;
+          card.innerHTML = `
+            <div class="text-xs text-white mb-1">${item.iconSvg || SVG.box}</div>
+            <span class="text-[8px] font-bold text-white truncate w-full uppercase">${item.name}</span>
+            <span class="text-[7px] text-zinc-400 mt-0.5">${item.rarity}</span>
+          `;
+          track.appendChild(card);
+        });
+
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+
+        // Trigger horizontal deceleration scroll animation
+        setTimeout(() => {
+          track.classList.add('reel-spinning');
+          // Card width (80px) + gap (8px) = 88px. Target card 38 offset centered
+          const targetOffset = -(winIndex * 88 - (200 - 44));
+          track.style.transform = `translateX(${targetOffset}px)`;
+
+          // Sound Tickers
+          let tickInterval = setInterval(() => {
+            this.sound.playReelTick();
+          }, 120);
+
+          setTimeout(() => clearInterval(tickInterval), 3200);
+
+          // Reveal Result after 4.5s
+          setTimeout(() => {
+            this.isRollingCrate = false;
+            this.sound.playCrateWin();
+            this.showCrateResult(winningItem);
+          }, 4600);
+        }, 100);
+      }
+
+      pickWeightedCrateItem(pool) {
+        const rand = Math.random() * 100;
+        let rarity = 'Common';
+        if (rand < 2) rarity = 'Legendary';
+        else if (rand < 8) rarity = 'Epic';
+        else if (rand < 22) rarity = 'Rare';
+        else if (rand < 45) rarity = 'Uncommon';
+        else rarity = 'Common';
+
+        const subPool = pool.filter(i => i.rarity === rarity);
+        if (subPool.length > 0) return subPool[Math.floor(Math.random() * subPool.length)];
+        return pool[0];
+      }
+
+      getRarityBorderClass(rarity) {
+        if (rarity === 'Legendary') return 'border-white bg-white/10';
+        if (rarity === 'Epic') return 'border-zinc-300 bg-zinc-800';
+        if (rarity === 'Rare') return 'border-zinc-500 bg-zinc-900';
+        if (rarity === 'Uncommon') return 'border-zinc-600 bg-zinc-900';
+        return 'border-zinc-700 bg-zinc-950';
+      }
+
+      showCrateResult(item) {
+        const resultPanel = document.getElementById('crateResultPanel');
+        document.getElementById('crateResultName').innerText = item.name;
+        document.getElementById('crateResultRarity').innerText = item.rarity;
+        document.getElementById('crateResultStats').innerText = item.statText;
+        document.getElementById('crateResultIcon').innerHTML = item.iconSvg || SVG.box;
+
+        resultPanel.classList.remove('hidden');
+      }
+
+      equipPendingCrateItem() {
+        if (!this.pendingCrateItem) return;
+        const item = this.pendingCrateItem;
+        const slot = this.getItemSlotType(item);
+
+        if (slot) {
+          // Add existing to inventory if overwritten
+          if (this.state.equipped[slot]) {
+            this.state.inventory.push(this.state.equipped[slot]);
+          }
+          this.state.equipped[slot] = item;
+          this.calculateStats();
+          this.saveGameData();
+          this.updateUI();
+          this.renderEquipment();
+        }
+
+        document.getElementById('crateRollModal').classList.add('opacity-0', 'pointer-events-none');
+        this.pendingCrateItem = null;
+      }
+
+      sellPendingCrateItem() {
+        if (!this.pendingCrateItem) return;
+        const val = this.pendingCrateItem.value || 200;
+        this.state.cash += val;
+        this.state.lifetimeCash += val;
+        this.updateUI();
+        this.saveGameData();
+
+        document.getElementById('crateRollModal').classList.add('opacity-0', 'pointer-events-none');
+        this.pendingCrateItem = null;
+      }
+
+      getItemSlotType(item) {
+        if (ITEMS_DATABASE.mouse.find(x => x.id === item.id)) return 'mouse';
+        if (ITEMS_DATABASE.keyboard.find(x => x.id === item.id)) return 'keyboard';
+        if (ITEMS_DATABASE.monitor.find(x => x.id === item.id)) return 'monitor';
+        if (ITEMS_DATABASE.pc.find(x => x.id === item.id)) return 'pc';
+        return null;
+      }
+
+      equipFromInventory(invIndex) {
+        const item = this.state.inventory[invIndex];
+        if (!item) return;
+
+        const slot = this.getItemSlotType(item);
+        if (slot) {
+          this.state.inventory.splice(invIndex, 1);
+          if (this.state.equipped[slot]) {
+            this.state.inventory.push(this.state.equipped[slot]);
+          }
+          this.state.equipped[slot] = item;
+
+          this.sound.playBuy();
+          this.calculateStats();
+          this.updateUI();
+          this.renderEquipment();
+        }
+      }
+
+      sellFromInventory(invIndex) {
+        const item = this.state.inventory[invIndex];
+        if (!item) return;
+
+        const val = item.value || 100;
+        this.state.inventory.splice(invIndex, 1);
+        this.state.cash += val;
+        this.state.lifetimeCash += val;
+
+        this.sound.playBuy();
+        this.updateUI();
+        this.renderEquipment();
+      }
+
+      tick(dt) {
+        if (this.passiveRps > 0) {
+          this.state.rp += this.passiveRps * dt;
+          this.checkAutomaticPromotion();
+        }
+        if (this.passiveCps > 0) {
+          const cashGained = this.passiveCps * dt;
+          this.state.cash += cashGained;
+          this.state.lifetimeCash += cashGained;
+        }
+        this.updateUI();
+      }
+
+      updateUI() {
+        const curTier = this.getCurrentTier();
+        const nextTier = this.getNextTier();
+
+        // Header Top HUD
+        document.getElementById('topCashDisplay').innerText = formatCash(this.state.cash);
+        document.getElementById('topRpDisplay').innerText = `${formatRP(this.state.rp)} RP`;
+        document.getElementById('dashCashDisplay').innerText = formatCash(this.state.cash);
+        document.getElementById('dashRpDisplay').innerText = `${formatRP(this.state.rp)} RP`;
+
+        // Rates
+        document.getElementById('dashRpsDisplay').innerText = `+${formatRP(this.passiveRps)} RP/s`;
+        document.getElementById('dashCpsDisplay').innerText = `+${formatCash(this.passiveCps)}/s`;
+
+        // Center Arena
+        document.getElementById('mainRpCount').innerHTML = `${formatRP(this.state.rp)} <span class="text-xs font-normal text-zinc-400">RP</span>`;
+        document.getElementById('clickYieldDisplay').innerText = `+${formatRP(this.clickPower)} RP`;
+
+        // Next Rank Tracker
+        if (nextTier) {
+          document.getElementById('promoCurrentTierText').innerText = `${curTier.fullName} → ${nextTier.fullName}`;
+          let estPayout = nextTier.baseCashPayout * this.cashMultiplier;
+          document.getElementById('promoRewardCash').innerText = `+${formatCash(estPayout)} CASH`;
+
+          const range = nextTier.rpReq - curTier.rpReq;
+          const currentProgress = this.state.rp - curTier.rpReq;
+          let pct = Math.min(100, Math.max(0, (currentProgress / range) * 100));
+
+          document.getElementById('promoProgressBar').style.width = `${pct}%`;
+          document.getElementById('promoCurrentRpText').innerText = `${formatRP(this.state.rp)} / ${formatRP(nextTier.rpReq)} RP`;
+          document.getElementById('promoPercentText').innerText = `${pct.toFixed(1)}%`;
+        } else {
+          document.getElementById('promoCurrentTierText').innerText = `${curTier.fullName} (MAX DIVISION)`;
+          document.getElementById('promoRewardCash').innerText = 'MAX';
+          document.getElementById('promoProgressBar').style.width = '100%';
+          document.getElementById('promoCurrentRpText').innerText = `${formatRP(this.state.rp)} RP`;
+          document.getElementById('promoPercentText').innerText = '100%';
+        }
+
+        // System Lifetime Stats
+        document.getElementById('statClicks').innerText = this.state.totalClicks.toLocaleString();
+        document.getElementById('statLifetimeCash').innerText = formatCash(this.state.lifetimeCash);
+        document.getElementById('statPromotions').innerText = this.state.promotionsCount.toLocaleString();
+
+        // Upgrades Store Affordability State Refresh
+        this.state.upgrades.forEach(u => {
+          const el = document.getElementById(`upg-item-${u.id}`);
+          if (el) {
+            const buyData = this.getUpgradeCostData(u, this.buyMultiplier);
+            if (this.state.cash >= buyData.cost && buyData.cost > 0) {
+              el.classList.remove('opacity-40', 'cursor-not-allowed');
+              el.classList.add('hover:border-white/40', 'cursor-pointer');
+            } else {
+              el.classList.add('opacity-40', 'cursor-not-allowed');
+              el.classList.remove('hover:border-white/40', 'cursor-pointer');
+            }
+          }
+        });
+
+        // Crates Affordability Refresh
+        CRATES_CONFIG.forEach(c => {
+          const btn = document.getElementById(`btn-open-${c.id}`);
+          if (btn) {
+            if (this.state.cash >= c.cost) {
+              btn.classList.remove('opacity-40', 'cursor-not-allowed');
+              btn.classList.add('hover:bg-zinc-200', 'cursor-pointer');
+            } else {
+              btn.classList.add('opacity-40', 'cursor-not-allowed');
+              btn.classList.remove('hover:bg-zinc-200', 'cursor-pointer');
+            }
+          }
+        });
+      }
+
+      renderUpgrades() {
+        const container = document.getElementById('upgradesList');
+        container.innerHTML = '';
+
+        const filtered = this.state.upgrades.filter(u => this.storeCategory === 'all' || u.cat === this.storeCategory);
+
+        filtered.forEach(u => {
+          const buyData = this.getUpgradeCostData(u, this.buyMultiplier);
+          const div = document.createElement('div');
+          div.id = `upg-item-${u.id}`;
+          div.className = `p-2.5 rounded-lg border border-exec-border bg-exec-card flex items-center justify-between transition-all select-none`;
+
+          div.innerHTML = `
+            <div class="flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-md bg-exec-bg border border-white/10 flex items-center justify-center text-white">
+                ${u.iconSvg || SVG.zap}
+              </div>
+              <div class="space-y-0.5">
+                <div class="font-mono text-xs font-bold text-white flex items-center gap-1.5">
+                  ${u.name}
+                  ${u.count > 0 ? `<span class="text-[8px] bg-exec-bg text-zinc-300 px-1 py-0.2 rounded font-mono border border-exec-border">LVL ${u.count}</span>` : ''}
+                </div>
+                <div class="font-sans text-[10px] text-zinc-400 leading-tight">${u.desc}</div>
+              </div>
+            </div>
+            <div class="text-right pl-2 font-mono">
+              <span class="text-xs font-extrabold text-white block">${formatCash(buyData.cost)}</span>
+              <span class="text-[8px] text-zinc-400">BUY ${buyData.count > 1 ? 'x' + buyData.count : ''}</span>
+            </div>
+          `;
+
+          div.addEventListener('click', () => this.buyUpgrade(u.id));
+          container.appendChild(div);
+        });
+      }
+
+      renderEquipment() {
+        // Render 4 Active Loadout Slots
+        const slotsGrid = document.getElementById('equippedSlotsGrid');
+        slotsGrid.innerHTML = '';
+
+        const slots = [
+          { key: 'mouse', name: 'MOUSE', defaultIcon: SVG.target },
+          { key: 'keyboard', name: 'KEYBOARD', defaultIcon: SVG.key },
+          { key: 'monitor', name: 'MONITOR', defaultIcon: SVG.chart },
+          { key: 'pc', name: 'PC RIG', defaultIcon: SVG.zap }
+        ];
+
+        slots.forEach(s => {
+          const item = this.state.equipped[s.key];
+          const div = document.createElement('div');
+          div.className = `p-2 rounded-lg border ${item ? 'border-white bg-white/5' : 'border-exec-border bg-exec-bg'} text-left space-y-1`;
+
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="text-[8px] text-zinc-400 uppercase font-bold">${s.name}</span>
+              <span class="text-white">${item ? item.iconSvg || s.defaultIcon : s.defaultIcon}</span>
+            </div>
+            <div class="font-bold text-xs text-white truncate">${item ? item.name : 'EMPTY'}</div>
+            <div class="text-[8px] text-zinc-400 truncate">${item ? item.statText : 'No Gear Equipped'}</div>
+          `;
+
+          slotsGrid.appendChild(div);
+        });
+
+        // Render Crates Store Grid
+        const cratesGrid = document.getElementById('cratesStoreGrid');
+        cratesGrid.innerHTML = '';
+
+        CRATES_CONFIG.forEach(c => {
+          const div = document.createElement('div');
+          div.className = `p-2.5 rounded-lg border border-exec-border bg-exec-card flex items-center justify-between font-mono`;
+
+          div.innerHTML = `
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded bg-exec-bg border border-white/10 flex items-center justify-center text-white">
+                ${c.iconSvg}
+              </div>
+              <div>
+                <span class="font-bold text-xs text-white uppercase block">${c.name}</span>
+                <span class="text-[8px] text-zinc-400">${c.desc}</span>
+              </div>
+            </div>
+            <button id="btn-open-${c.id}" onclick="window.game.openCrate('${c.id}')" class="px-2.5 py-1 rounded bg-white text-black font-extrabold text-xs tracking-wider uppercase cursor-pointer hover:bg-zinc-200 transition-colors flex-shrink-0">
+              ${formatCash(c.cost)}
+            </button>
+          `;
+
+          cratesGrid.appendChild(div);
+        });
+
+        // Render Inventory List
+        const invList = document.getElementById('inventoryList');
+        invList.innerHTML = '';
+
+        document.getElementById('inventoryCountText').innerText = `${this.state.inventory.length} ITEMS OWNED`;
+
+        if (this.state.inventory.length === 0) {
+          invList.innerHTML = `<div class="text-[10px] text-zinc-500 text-center py-4 uppercase">INVENTORY EMPTY. OPEN CRATES TO ACQUIRE HARDWARE.</div>`;
+        } else {
+          this.state.inventory.forEach((item, idx) => {
+            const div = document.createElement('div');
+            div.className = `p-2 rounded-lg border border-exec-border bg-exec-card flex items-center justify-between text-[10px] font-mono`;
+
+            div.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="text-white">${item.iconSvg || SVG.box}</span>
+                <div>
+                  <div class="font-bold text-white uppercase flex items-center gap-1.5">
+                    ${item.name}
+                    <span class="text-[8px] px-1 py-0.2 rounded border border-white/20 bg-zinc-900 text-zinc-300">${item.rarity}</span>
+                  </div>
+                  <span class="text-[8px] text-zinc-400">${item.statText}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <button onclick="window.game.equipFromInventory(${idx})" class="px-2 py-0.5 rounded bg-white text-black font-bold hover:bg-zinc-200 cursor-pointer">EQUIP</button>
+                <button onclick="window.game.sellFromInventory(${idx})" class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-bold hover:bg-zinc-800 cursor-pointer">SELL (${formatCash(item.value || 100)})</button>
+              </div>
+            `;
+
+            invList.appendChild(div);
+          });
+        }
+      }
+
+      renderLadder() {
+        const container = document.getElementById('ladderList');
+        container.innerHTML = '';
+
+        RANK_TIERS.forEach(t => {
+          const isCurrent = t.index === this.state.currentTierIndex;
+          const isUnlocked = t.index <= this.state.currentTierIndex;
+
+          const item = document.createElement('div');
+          item.className = `p-2 rounded-lg border flex items-center justify-between transition-colors ${
+            isCurrent 
+              ? 'border-white bg-white/10 font-bold' 
+              : isUnlocked 
+                ? 'border-exec-border bg-exec-card text-zinc-300' 
+                : 'border-exec-border/40 bg-exec-bg/40 text-zinc-600 opacity-50'
+          }`;
+
+          let estPayout = t.baseCashPayout * this.cashMultiplier;
+
+          item.innerHTML = `
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 flex items-center justify-center">
+                ${getRankBadgeSvg(t.rankIndex)}
+              </div>
+              <div>
+                <span class="text-xs block text-white font-semibold">${t.fullName}</span>
+                <span class="text-[8px] text-zinc-400">REQ: ${formatRP(t.rpReq)} RP</span>
+              </div>
+            </div>
+            <div class="text-right font-mono">
+              <span class="text-xs text-white font-bold block">+${formatCash(estPayout)}</span>
+              <span class="text-[8px] text-zinc-400">${isCurrent ? 'ACTIVE' : isUnlocked ? 'CLEARED' : 'LOCKED'}</span>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      renderLeaderboard() {
+        const container = document.getElementById('leaderboardList');
+        container.innerHTML = '';
+
+        const playerTier = this.getCurrentTier();
+        const playerEntry = {
+          tag: this.state.gamertag,
+          rp: this.state.rp,
+          tier: playerTier.fullName,
+          avatar: this.state.avatarId,
+          isPlayer: true
+        };
+
+        const allEntries = [...LEADERBOARD_SEED, playerEntry];
+        allEntries.sort((a, b) => b.rp - a.rp);
+
+        let playerPos = 0;
+
+        allEntries.forEach((entry, idx) => {
+          const rankPos = idx + 1;
+          if (entry.isPlayer) playerPos = rankPos;
+
+          const item = document.createElement('div');
+          item.className = `p-2 rounded-lg border flex items-center justify-between font-mono ${
+            entry.isPlayer 
+              ? 'border-white bg-white/10 text-white font-bold' 
+              : 'border-exec-border bg-exec-card text-zinc-300'
+          }`;
+
+          item.innerHTML = `
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-bold w-5 text-zinc-400">#${rankPos}</span>
+              <div class="w-5 h-5 text-white">${EMBLEM_SVGS[entry.avatar] || SVG.zap}</div>
+              <div>
+                <span class="text-xs block text-white">${entry.tag} ${entry.isPlayer ? '<span class="text-[8px] bg-white text-black px-1 rounded font-bold">YOU</span>' : ''}</span>
+                <span class="text-[8px] text-zinc-400">${entry.tier}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-white font-bold block">${formatRP(entry.rp)} RP</span>
+            </div>
+          `;
+
+          container.appendChild(item);
+        });
+
+        document.getElementById('leaderPlayerPos').innerText = `#${playerPos} IN LEAGUE`;
+      }
+
+      saveGameData() {
+        this.state.lastSaveTime = Date.now();
+        localStorage.setItem('RANKED_CLICKER_SAVE_EXEC_V7', JSON.stringify(this.state));
+      }
+
+      loadGameData() {
+        const saved = localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V7') || localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V6');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            this.state = deepMergeSave(JSON.parse(JSON.stringify(this.defaultData)), parsed);
+
+            this.updateHeaderProfile();
+
+            if (parsed.lastSaveTime) {
+              const secondsAway = Math.min(86400, (Date.now() - parsed.lastSaveTime) / 1000);
+              if (secondsAway > 10) {
+                this.calculateStats();
+                const offlineRp = this.passiveRps * secondsAway;
+                const offlineCash = this.passiveCps * secondsAway;
+
+                if (offlineRp > 0 || offlineCash > 0) {
+                  this.state.rp += offlineRp;
+                  this.state.cash += offlineCash;
+                  this.state.lifetimeCash += offlineCash;
+                  this.checkAutomaticPromotion();
+
+                  setTimeout(() => {
+                    this.showOfflineModal(secondsAway, offlineRp, offlineCash);
+                  }, 400);
+                }
+              }
+            }
+          } catch(e) {
+            console.error('Error parsing save file:', e);
           }
         }
-      });
-      renderUpgrades();
-    }
-
-    function buyUpgrade(id) {
-      const upg = UPGRADES_DEF.find(u => u.id === id);
-      if (!upg) return;
-
-      const currentLvl = state.upgrades[id] || 0;
-      const cost = Math.floor(upg.baseCost * Math.pow(upg.costMult, currentLvl));
-
-      if (state.cash >= cost) {
-        state.cash -= cost;
-        state.upgrades[id] = currentLvl + 1;
-        playSound('buy');
-        renderUI();
-        saveState();
-      }
-    }
-
-    function renderUpgrades() {
-      const grid = document.getElementById('upgrades-grid');
-      grid.innerHTML = '';
-
-      UPGRADES_DEF.forEach(u => {
-        if (activeFilter !== 'ALL' && u.cat !== activeFilter) return;
-
-        const lvl = state.upgrades[u.id] || 0;
-        const cost = Math.floor(u.baseCost * Math.pow(u.costMult, lvl));
-        const canAfford = state.cash >= cost;
-
-        const card = document.createElement('div');
-        card.className = `bg-zinc-900 border ${canAfford ? 'border-zinc-700 hover:border-zinc-500' : 'border-zinc-800 opacity-60'} rounded-lg p-4 flex items-center justify-between gap-4 transition-all`;
-        
-        card.innerHTML = `
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="font-display font-bold text-base text-white">${u.name}</span>
-              <span class="text-2xs font-mono bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded">LVL ${lvl}</span>
-            </div>
-            <p class="text-xs font-mono text-zinc-400">${u.desc}</p>
-          </div>
-          <button onclick="buyUpgrade('${u.id}')" ${!canAfford ? 'disabled' : ''} class="px-4 py-2 font-mono font-bold text-xs rounded uppercase tracking-wider shrink-0 transition-all ${canAfford ? 'bg-white text-black hover:bg-zinc-200' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}">
-            $${formatNumber(cost)}
-          </button>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    /* ---------------------------------------------------- */
-    /* CRATES & LOOT UNBOXING REEL                          */
-    /* ---------------------------------------------------- */
-    const CRATE_ITEMS = {
-      mouse: [
-        { name: "Standard Laser Mouse", clickBonus: 5, rarity: "COMMON", color: "#a1a1aa" },
-        { name: "Pro Gaming Mouse", clickBonus: 25, rarity: "RARE", color: "#38bdf8" },
-        { name: "Apex Wireless Sensor", clickBonus: 100, rarity: "LEGENDARY", color: "#fbbf24" }
-      ],
-      keyboard: [
-        { name: "Membrane Keyboard", autoBonus: 10, rarity: "COMMON", color: "#a1a1aa" },
-        { name: "Mechanical Switch Board", autoBonus: 50, rarity: "RARE", color: "#38bdf8" },
-        { name: "Custom Hall-Effect Board", autoBonus: 200, rarity: "LEGENDARY", color: "#fbbf24" }
-      ],
-      monitor: [
-        { name: "60Hz Office Display", payoutBonus: 0.2, rarity: "COMMON", color: "#a1a1aa" },
-        { name: "144Hz Gaming Monitor", payoutBonus: 0.5, rarity: "RARE", color: "#38bdf8" },
-        { name: "240Hz OLED Display", payoutBonus: 1.2, rarity: "LEGENDARY", color: "#fbbf24" }
-      ],
-      pc: [
-        { name: "Pre-built Desktop", clickBonus: 50, autoBonus: 50, rarity: "COMMON", color: "#a1a1aa" },
-        { name: "Liquid Cooled Rig", clickBonus: 200, autoBonus: 200, rarity: "RARE", color: "#38bdf8" },
-        { name: "Quantum Workstation", clickBonus: 1000, autoBonus: 1000, rarity: "LEGENDARY", color: "#fbbf24" }
-      ]
-    };
-
-    function openCrate(type) {
-      const costs = { mouse: 150, keyboard: 400, monitor: 1000, pc: 2500 };
-      const cost = costs[type];
-      if (state.cash < cost) return;
-
-      state.cash -= cost;
-      renderUI();
-
-      const viewport = document.getElementById('crate-unboxing-viewport');
-      const track = document.getElementById('crate-reel-track');
-      viewport.classList.remove('hidden');
-
-      // Build random reel items
-      const pool = CRATE_ITEMS[type];
-      const reel = [];
-      for (let i = 0; i < 30; i++) {
-        const rand = Math.random();
-        let item = pool[0];
-        if (rand > 0.9) item = pool[2];
-        else if (rand > 0.6) item = pool[1];
-        reel.push(item);
-      }
-      const winningItem = reel[24]; // Target item
-
-      track.innerHTML = '';
-      reel.forEach((item, idx) => {
-        const card = document.createElement('div');
-        card.className = `w-32 h-28 bg-zinc-950 border rounded p-2 flex flex-col justify-between shrink-0 font-mono text-2xs`;
-        card.style.borderColor = item.color;
-        card.innerHTML = `
-          <div class="text-right font-bold" style="color:${item.color}">${item.rarity}</div>
-          <div class="font-bold text-white text-xs leading-tight">${item.name}</div>
-        `;
-        track.appendChild(card);
-      });
-
-      // Animate Scroll
-      track.style.transition = 'none';
-      track.style.transform = 'translateX(0px)';
-
-      setTimeout(() => {
-        const cardWidth = 136; // 128px + 8px gap
-        const targetX = -(24 * cardWidth - 150);
-        track.style.transition = 'transform 4s cubic-bezier(0.15, 0.9, 0.25, 1)';
-        track.style.transform = `translateX(${targetX}px)`;
-        playSound('tick');
-      }, 50);
-
-      // Finish unboxing
-      setTimeout(() => {
-        state.inventory.push({ ...winningItem, id: Date.now(), type });
-        playSound('promo');
-        saveState();
-        renderInventory();
-      }, 4100);
-    }
-
-    /* ---------------------------------------------------- */
-    /* INVENTORY & LOADOUT ENGINE                           */
-    /* ---------------------------------------------------- */
-    function equipItem(itemObj) {
-      state.loadout[itemObj.type] = itemObj;
-      state.inventory = state.inventory.filter(i => i.id !== itemObj.id);
-      saveState();
-      renderUI();
-      renderInventory();
-    }
-
-    function sellItem(itemId) {
-      const item = state.inventory.find(i => i.id === itemId);
-      if (!item) return;
-      state.cash += 50;
-      state.inventory = state.inventory.filter(i => i.id !== itemId);
-      playSound('buy');
-      saveState();
-      renderUI();
-      renderInventory();
-    }
-
-    function renderInventory() {
-      // Equipped Slots
-      ['mouse', 'keyboard', 'monitor', 'pc'].forEach(type => {
-        const slotEl = document.getElementById(`slot-${type}`);
-        const item = state.loadout[type];
-        if (item) {
-          slotEl.className = "bg-zinc-900 border rounded-lg p-4 space-y-2";
-          slotEl.style.borderColor = item.color;
-          slotEl.innerHTML = `
-            <div class="flex items-center justify-between text-2xs font-mono">
-              <span class="text-zinc-400 uppercase">${type} SLOT</span>
-              <span class="font-bold" style="color:${item.color}">${item.rarity}</span>
-            </div>
-            <div class="font-bold text-white text-sm">${item.name}</div>
-          `;
-        } else {
-          slotEl.className = "bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-2";
-          slotEl.innerHTML = `
-            <div class="text-2xs font-mono text-zinc-500 uppercase">${type} SLOT</div>
-            <div class="font-bold text-zinc-600 text-sm">EMPTY</div>
-          `;
-        }
-      });
-
-      // Storage Grid
-      const grid = document.getElementById('inventory-items-grid');
-      document.getElementById('inventory-count-badge').innerText = `${state.inventory.length} ITEMS`;
-      grid.innerHTML = '';
-
-      state.inventory.forEach(item => {
-        const card = document.createElement('div');
-        card.className = "bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex flex-col justify-between gap-3 font-mono text-2xs";
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-zinc-500 uppercase">${item.type}</span>
-              <span class="font-bold" style="color:${item.color}">${item.rarity}</span>
-            </div>
-            <div class="font-bold text-white text-xs">${item.name}</div>
-          </div>
-          <div class="flex gap-2">
-            <button onclick='equipItem(${JSON.stringify(item)})' class="flex-1 bg-white text-black font-bold py-1.5 rounded uppercase">EQUIP</button>
-            <button onclick="sellItem(${item.id})" class="px-3 bg-zinc-800 text-zinc-400 hover:text-white py-1.5 rounded font-bold uppercase">SELL ($50)</button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    /* ---------------------------------------------------- */
-    /* RANK ROADMAP GENERATOR                               */
-    /* ---------------------------------------------------- */
-    function renderRanksRoadmap() {
-      const container = document.getElementById('ranks-roadmap-container');
-      container.innerHTML = '';
-
-      RANKS.forEach(r => {
-        const isCurrent = getRankInfo(state.rp).activeRank.id === r.id;
-        const isUnlocked = state.rp >= r.reqRP;
-
-        const row = document.createElement('div');
-        row.className = `p-3 rounded-lg border flex items-center justify-between font-mono text-xs transition-all ${isCurrent ? 'bg-zinc-900 border-2' : isUnlocked ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-950 border-zinc-900 opacity-50'}`;
-        row.style.borderColor = isCurrent ? r.color : '';
-
-        row.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8">${getRankSVG(r.division, r.color)}</div>
-            <div>
-              <div class="font-bold text-white" style="color:${r.color}">${r.name}</div>
-              <div class="text-2xs text-zinc-500">${r.division} DIVISION</div>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-zinc-400 font-bold">${formatNumber(r.reqRP)} RP</div>
-            <div class="text-2xs text-emerald-400">+$${formatNumber(r.payout)} Promo Cash</div>
-          </div>
-        `;
-        container.appendChild(row);
-      });
-    }
-
-    /* ---------------------------------------------------- */
-    /* MAIN RENDER LOOP & TAB SWITCHING                     */
-    /* ---------------------------------------------------- */
-    function renderUI() {
-      const { activeRank, nextRank } = getRankInfo(state.rp);
-
-      // Header Stat Counters
-      document.getElementById('stat-rp').innerText = formatNumber(state.rp);
-      document.getElementById('stat-cash').innerText = formatNumber(state.cash);
-      document.getElementById('header-gamertag').innerText = state.user.gamertag;
-
-      // Rank Title & Division
-      const rankTitleEl = document.getElementById('header-rank-title');
-      rankTitleEl.innerText = activeRank.name.toUpperCase();
-      rankTitleEl.style.color = activeRank.color;
-      rankTitleEl.style.borderColor = activeRank.color;
-      rankTitleEl.style.background = `${activeRank.color}15`;
-
-      document.getElementById('header-tier-num').innerText = activeRank.id;
-      document.getElementById('header-rank-division').innerText = `${activeRank.division} DIVISION`;
-
-      // Header Badge SVG
-      document.getElementById('header-badge-container').innerHTML = getRankSVG(activeRank.division, activeRank.color);
-      document.getElementById('clicker-center-icon').innerHTML = getRankSVG(activeRank.division, activeRank.color);
-
-      // Rank Progress Bar
-      const progressBar = document.getElementById('rank-progress-bar');
-      const progressPercent = document.getElementById('rank-progress-percent');
-      const nextRankName = document.getElementById('rank-progress-next-name');
-
-      if (nextRank) {
-        const prevReq = activeRank.reqRP;
-        const currentProgress = state.rp - prevReq;
-        const totalNeeded = nextRank.reqRP - prevReq;
-        const pct = Math.min(100, Math.max(0, (currentProgress / totalNeeded) * 100));
-
-        progressBar.style.width = `${pct}%`;
-        progressBar.style.backgroundColor = activeRank.color;
-        progressPercent.innerText = `${pct.toFixed(1)}%`;
-        nextRankName.innerText = nextRank.name.toUpperCase();
-      } else {
-        progressBar.style.width = `100%`;
-        progressPercent.innerText = `MAX RANK`;
-        nextRankName.innerText = `LEGEND COMPLETED`;
       }
 
-      // Arena Metrics
-      document.getElementById('stat-click-power').innerText = `+${formatNumber(getClickPower())} RP`;
-      document.getElementById('stat-auto-rp').innerText = `${formatNumber(getAutoRP())} RP/s`;
-      document.getElementById('stat-tier-payout').innerText = `$${formatNumber(activeRank.payout * getPayoutMultiplier())} / Tier`;
+      updateHeaderProfile() {
+        document.getElementById('headerGamertag').innerText = this.state.gamertag || 'OPERATOR';
+        document.getElementById('profileGamertag').innerText = this.state.gamertag || 'OPERATOR';
+        document.getElementById('profileEmail').innerText = this.state.email || 'operator@league.com';
+        document.getElementById('playerAvatarIconSvg').innerHTML = EMBLEM_SVGS[this.state.avatarId] || SVG.zap;
+        document.getElementById('profileIconLarge').innerHTML = EMBLEM_SVGS[this.state.avatarId] || SVG.zap;
+      }
 
-      // Update Arena Glow Accent
-      document.getElementById('arena-backdrop').style.setProperty('--rank-glow-color', `${activeRank.color}40`);
+      showOfflineModal(seconds, rpGained, cashGained) {
+        let h = Math.floor(seconds / 3600);
+        let m = Math.floor((seconds % 3600) / 60);
+        let s = Math.floor(seconds % 60);
+        document.getElementById('offlineTimeText').innerText = 
+          `You were away for ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        document.getElementById('offlineRpEarned').innerText = `+${formatRP(rpGained)} RP`;
+        document.getElementById('offlineCashEarned').innerText = `+${formatCash(cashGained)}`;
 
-      renderUpgrades();
-    }
+        const modal = document.getElementById('offlineModal');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+      }
 
-    function setActiveTab(tab) {
-      activeTab = tab;
-      ['arena', 'upgrades', 'crates', 'loadout', 'ranks', 'system'].forEach(t => {
-        const btn = document.getElementById(`tab-btn-${t}`);
-        const view = document.getElementById(`tab-${t}`);
-        if (t === tab) {
-          btn.className = "px-5 py-3 font-semibold text-white border-b-2 border-white flex items-center gap-2 hover:bg-zinc-850 transition-all shrink-0";
-          view.classList.remove('hidden');
-        } else {
-          btn.className = "px-5 py-3 font-semibold text-zinc-400 border-b-2 border-transparent flex items-center gap-2 hover:bg-zinc-850 hover:text-zinc-200 transition-all shrink-0";
-          view.classList.add('hidden');
-        }
-      });
+      exportSaveString() {
+        return btoa(JSON.stringify(this.state));
+      }
 
-      if (tab === 'ranks') renderRanksRoadmap();
-      if (tab === 'loadout') renderInventory();
-    }
-
-    /* ---------------------------------------------------- */
-    /* AUTH & SYSTEM CONTROLS                               */
-    /* ---------------------------------------------------- */
-    function switchAuthMode(mode) {
-      const isSignup = mode === 'signup';
-      document.getElementById('signup-extra-fields').classList.toggle('hidden', !isSignup);
-      document.getElementById('auth-submit-btn').innerText = isSignup ? 'CREATE EXECUTIVE ACCOUNT' : 'LOG IN TO TERMINAL';
-      
-      document.getElementById('auth-tab-signin').className = !isSignup ? 'py-2 text-center rounded font-semibold bg-zinc-800 text-white transition-all' : 'py-2 text-center rounded font-semibold text-zinc-400 hover:text-white transition-all';
-      document.getElementById('auth-tab-signup').className = isSignup ? 'py-2 text-center rounded font-semibold bg-zinc-800 text-white transition-all' : 'py-2 text-center rounded font-semibold text-zinc-400 hover:text-white transition-all';
-    }
-
-    function handleAuthSubmit(e) {
-      e.preventDefault();
-      const email = document.getElementById('auth-email').value;
-      const tagInput = document.getElementById('auth-gamertag').value;
-
-      state.user.email = email;
-      state.user.gamertag = tagInput || email.split('@')[0].toUpperCase();
-      state.user.loggedIn = true;
-
-      document.getElementById('auth-overlay').classList.add('hidden');
-      renderUI();
-      saveState();
-    }
-
-    function guestLogin() {
-      state.user.gamertag = "GUEST_OPERATOR";
-      state.user.loggedIn = true;
-      document.getElementById('auth-overlay').classList.add('hidden');
-      renderUI();
-    }
-
-    function togglePasswordVisibility() {
-      const input = document.getElementById('auth-password');
-      input.type = input.type === 'password' ? 'text' : 'password';
-    }
-
-    function toggleSound() {
-      state.settings.sound = !state.settings.sound;
-      document.getElementById('sound-toggle-btn').innerText = state.settings.sound ? 'ENABLED' : 'MUTED';
-      saveState();
-    }
-
-    function exportSaveData() {
-      const b64 = btoa(JSON.stringify(state));
-      navigator.clipboard.writeText(b64);
-      alert("Save Data copied to clipboard!");
-    }
-
-    function importSaveData() {
-      const b64 = prompt("Paste base64 save string:");
-      if (b64) {
+      importSaveString(b64) {
         try {
-          const parsed = JSON.parse(atob(b64));
-          state = mergeSaveData(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
-          saveState();
-          renderUI();
-          alert("Save imported successfully!");
-        } catch (e) {
-          alert("Invalid save string!");
+          const json = atob(b64.trim());
+          const parsed = JSON.parse(json);
+          this.state = deepMergeSave(JSON.parse(JSON.stringify(this.defaultData)), parsed);
+          this.saveGameData();
+          location.reload();
+        } catch(e) {
+          console.error('Invalid save format', e);
         }
       }
-    }
 
-    function logoutSession() {
-      state.user.loggedIn = false;
-      document.getElementById('auth-overlay').classList.remove('hidden');
-    }
-
-    function confirmHardReset() {
-      if (confirm("Are you sure you want to permanently reset all progress?")) {
-        state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-        saveState();
-        renderUI();
+      resetProgress() {
+        localStorage.removeItem('RANKED_CLICKER_SAVE_EXEC_V7');
+        localStorage.removeItem('RANKED_CLICKER_SAVE_EXEC_V6');
         location.reload();
       }
     }
 
-    /* ---------------------------------------------------- */
-    /* TICKER LOOPS (PASSIVE RP & AUTO-SAVE)                 */
-    /* ---------------------------------------------------- */
-    setInterval(() => {
-      const auto = getAutoRP();
-      if (auto > 0) {
-        const prevRP = state.rp;
-        state.rp += auto / 10; // Tick 10 times per second
-        checkRankPromotion(prevRP, state.rp);
-        renderUI();
-      }
-    }, 100);
 
-    setInterval(() => {
-      saveState();
-    }, 3000);
+    /* ================= INITIALIZATION & EVENT BINDINGS ================= */
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('svgIconTerminalHeader').innerHTML = SVG.shield;
+      document.getElementById('svgInputMail').innerHTML = SVG.mail;
+      document.getElementById('svgInputLock').innerHTML = SVG.lock;
+      document.getElementById('svgInputUser').innerHTML = SVG.user;
+      document.getElementById('svgInputEye').innerHTML = SVG.eye;
+      document.getElementById('svgBtnAuthIcon').innerHTML = SVG.key;
 
-    /* Initialization */
-    window.addEventListener('load', () => {
-      loadState();
-      if (state.user.loggedIn) {
-        document.getElementById('auth-overlay').classList.add('hidden');
+      document.getElementById('svgTopCash').innerHTML = SVG.dollar;
+      document.getElementById('svgTopRp').innerHTML = SVG.trophy;
+      document.getElementById('soundIconSvg').innerHTML = SVG.volumeOn;
+
+      document.getElementById('svgMenuSeasonIcon').innerHTML = SVG.trophy;
+      document.getElementById('svgBtnPlayIcon').innerHTML = SVG.target;
+      document.getElementById('svgBtnCratesIcon').innerHTML = SVG.box;
+      document.getElementById('svgBtnCratesArrow').innerHTML = SVG.arrowRight;
+      document.getElementById('svgBtnLeaderIcon').innerHTML = SVG.users;
+      document.getElementById('svgBtnLeaderArrow').innerHTML = SVG.arrowRight;
+      document.getElementById('svgBtnSettingsIcon').innerHTML = SVG.settings;
+      document.getElementById('svgBtnSettingsArrow').innerHTML = SVG.arrowRight;
+
+      document.getElementById('svgTabStoreIcon').innerHTML = SVG.dollar;
+      document.getElementById('svgTabCratesIcon').innerHTML = SVG.box;
+      document.getElementById('svgTabLadderIcon').innerHTML = SVG.trophy;
+      document.getElementById('svgTabLeaderIcon').innerHTML = SVG.users;
+      document.getElementById('svgTabSettingsIcon').innerHTML = SVG.settings;
+
+      document.getElementById('svgLoadoutIcon').innerHTML = SVG.box;
+      document.getElementById('svgProfileLogout').innerHTML = SVG.logout;
+      document.getElementById('svgBtnExport').innerHTML = SVG.download;
+      document.getElementById('svgBtnImport').innerHTML = SVG.upload;
+      document.getElementById('svgFooterShield').innerHTML = SVG.shield;
+
+      const avatarGrid = document.getElementById('avatarGrid');
+      avatarGrid.innerHTML = '';
+      EMBLEM_SVGS.forEach((svgStr, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('data-avatar', idx);
+        btn.className = `avatar-opt p-1.5 rounded-lg border flex items-center justify-center cursor-pointer transition-colors ${idx === 0 ? 'border-white bg-white/10 text-white' : 'border-exec-border bg-exec-bg text-zinc-400 hover:bg-white/5'}`;
+        btn.innerHTML = svgStr;
+        avatarGrid.appendChild(btn);
+      });
+
+      const game = new Game();
+      window.game = game;
+
+      const onboardingOverlay = document.getElementById('onboardingOverlay');
+      const savedData = localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V7') || localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V6');
+
+      if (!savedData) {
+        runTerminalSequence();
+      } else {
+        onboardingOverlay.classList.add('opacity-0', 'pointer-events-none');
       }
-      renderUI();
+
+      function runTerminalSequence() {
+        const terminalLog = document.getElementById('terminalLog');
+        const operatorForm = document.getElementById('operatorForm');
+        const lines = [
+          '> RANKED CLICKER // EXECUTIVE ENGINE INITIALIZING...',
+          '> LOADING MONOCHROME SYSTEM PROTOCOL V7...',
+          '> VERIFYING SYSTEM SECURITY INTEGRITY...',
+          '> CREDENTIAL AUTHORIZATION REQUIRED:'
+        ];
+
+        let lineIdx = 0;
+        function typeLine() {
+          if (lineIdx < lines.length) {
+            const p = document.createElement('div');
+            p.innerText = lines[lineIdx];
+            terminalLog.appendChild(p);
+            game.sound.playUiClick();
+            lineIdx++;
+            setTimeout(typeLine, 220);
+          } else {
+            operatorForm.classList.remove('opacity-0');
+          }
+        }
+        setTimeout(typeLine, 200);
+      }
+
+      let passwordMasked = true;
+      const btnTogglePasswordMask = document.getElementById('btnTogglePasswordMask');
+      const inputAuthPassword = document.getElementById('inputAuthPassword');
+
+      btnTogglePasswordMask.addEventListener('click', () => {
+        passwordMasked = !passwordMasked;
+        inputAuthPassword.type = passwordMasked ? 'password' : 'text';
+        document.getElementById('svgInputEye').innerHTML = passwordMasked ? SVG.eye : SVG.eyeOff;
+      });
+
+      let authMode = 'register';
+      const authTabRegister = document.getElementById('authTabRegister');
+      const authTabLogin = document.getElementById('authTabLogin');
+      const registerOnlyFields = document.getElementById('registerOnlyFields');
+      const btnAuthText = document.getElementById('btnAuthText');
+
+      authTabRegister.addEventListener('click', () => {
+        game.sound.playUiClick();
+        authMode = 'register';
+        authTabRegister.className = 'py-1.5 rounded-md font-bold bg-white text-black cursor-pointer transition-colors';
+        authTabLogin.className = 'py-1.5 rounded-md text-zinc-400 hover:text-white cursor-pointer transition-colors';
+        registerOnlyFields.classList.remove('hidden');
+        btnAuthText.innerText = 'INITIALIZE OPERATOR ACCOUNT';
+      });
+
+      authTabLogin.addEventListener('click', () => {
+        game.sound.playUiClick();
+        authMode = 'login';
+        authTabLogin.className = 'py-1.5 rounded-md font-bold bg-white text-black cursor-pointer transition-colors';
+        authTabRegister.className = 'py-1.5 rounded-md text-zinc-400 hover:text-white cursor-pointer transition-colors';
+        registerOnlyFields.classList.add('hidden');
+        btnAuthText.innerText = 'AUTHENTICATE & ACCESS ARENA';
+      });
+
+      let selectedAvatar = 0;
+      document.querySelectorAll('.avatar-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          game.sound.playUiClick();
+          document.querySelectorAll('.avatar-opt').forEach(b => {
+            b.className = 'avatar-opt p-1.5 rounded-lg border border-exec-border bg-exec-bg text-zinc-400 hover:bg-white/5 cursor-pointer';
+          });
+          btn.className = 'avatar-opt p-1.5 rounded-lg border border-white bg-white/10 text-white cursor-pointer';
+          selectedAvatar = parseInt(btn.getAttribute('data-avatar'));
+        });
+      });
+
+      document.getElementById('btnSubmitAuth').addEventListener('click', () => {
+        const email = document.getElementById('inputAuthEmail').value.trim();
+        const password = document.getElementById('inputAuthPassword').value.trim();
+        const tag = document.getElementById('inputGamertag').value.trim();
+
+        if (!email || !password) return;
+
+        game.state.email = email;
+        game.state.passwordHash = btoa(password);
+
+        if (authMode === 'register') {
+          game.state.gamertag = tag || 'OPERATOR';
+          game.state.avatarId = selectedAvatar;
+        } else {
+          if (!game.state.gamertag) game.state.gamertag = email.split('@')[0].toUpperCase();
+        }
+
+        game.updateHeaderProfile();
+        game.saveGameData();
+        game.sound.playFanfare();
+
+        onboardingOverlay.classList.add('opacity-0', 'pointer-events-none');
+      });
+
+      const menuView = document.getElementById('menuView');
+      const gameView = document.getElementById('gameView');
+
+      function showScreen(screen) {
+        game.sound.playUiClick();
+        if (screen === 'game') {
+          menuView.classList.remove('view-active');
+          menuView.classList.add('view-hidden');
+          gameView.classList.remove('view-hidden');
+          gameView.classList.add('view-active');
+        } else {
+          gameView.classList.remove('view-active');
+          gameView.classList.add('view-hidden');
+          menuView.classList.remove('view-hidden');
+          menuView.classList.add('view-active');
+        }
+      }
+
+      document.getElementById('btnPlay').addEventListener('click', () => showScreen('game'));
+      document.getElementById('btnBackMenu').addEventListener('click', () => showScreen('menu'));
+      document.getElementById('headerBrand').addEventListener('click', () => showScreen('menu'));
+
+      const tabs = {
+        upgrades: { btn: document.getElementById('tabBtnUpgrades'), content: document.getElementById('tabContentUpgrades') },
+        crates: { btn: document.getElementById('tabBtnCrates'), content: document.getElementById('tabContentCrates') },
+        ladder: { btn: document.getElementById('tabBtnLadder'), content: document.getElementById('tabContentLadder') },
+        leader: { btn: document.getElementById('tabBtnLeader'), content: document.getElementById('tabContentLeader') },
+        settings: { btn: document.getElementById('tabBtnSettings'), content: document.getElementById('tabContentSettings') },
+      };
+
+      function activateTab(activeKey) {
+        game.sound.playUiClick();
+        Object.keys(tabs).forEach(k => {
+          const t = tabs[k];
+          if (k === activeKey) {
+            t.btn.classList.add('border-white', 'text-white', 'font-bold', 'bg-white/5');
+            t.btn.classList.remove('border-transparent', 'text-zinc-400');
+            t.content.classList.remove('hidden');
+          } else {
+            t.btn.classList.remove('border-white', 'text-white', 'font-bold', 'bg-white/5');
+            t.btn.classList.add('border-transparent', 'text-zinc-400');
+            t.content.classList.add('hidden');
+          }
+        });
+      }
+
+      document.getElementById('tabBtnUpgrades').addEventListener('click', () => activateTab('upgrades'));
+      document.getElementById('tabBtnCrates').addEventListener('click', () => activateTab('crates'));
+      document.getElementById('tabBtnLadder').addEventListener('click', () => activateTab('ladder'));
+      document.getElementById('tabBtnLeader').addEventListener('click', () => activateTab('leader'));
+      document.getElementById('tabBtnSettings').addEventListener('click', () => activateTab('settings'));
+
+      document.getElementById('btnCratesMenu').addEventListener('click', () => { showScreen('game'); activateTab('crates'); });
+      document.getElementById('btnLeaderboardMenu').addEventListener('click', () => { showScreen('game'); activateTab('leader'); });
+      document.getElementById('btnSettingsMenu').addEventListener('click', () => { showScreen('game'); activateTab('settings'); });
+
+      document.getElementById('btnEquipCrateItem').addEventListener('click', () => game.equipPendingCrateItem());
+      document.getElementById('btnSellCrateItem').addEventListener('click', () => game.sellPendingCrateItem());
+
+      const catBtns = {
+        all: document.getElementById('catBtnAll'),
+        click: document.getElementById('catBtnClick'),
+        prp: document.getElementById('catBtnPrp'),
+        pcash: document.getElementById('catBtnPcash'),
+        perks: document.getElementById('catBtnPerks')
+      };
+
+      Object.keys(catBtns).forEach(catKey => {
+        catBtns[catKey].addEventListener('click', () => {
+          game.sound.playUiClick();
+          game.storeCategory = catKey;
+          Object.keys(catBtns).forEach(k => {
+            catBtns[k].className = 'px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer';
+          });
+          catBtns[catKey].className = 'px-2 py-0.5 rounded bg-white text-black font-bold cursor-pointer';
+          game.renderUpgrades();
+        });
+      });
+
+      const buyAmt1 = document.getElementById('buyAmt1');
+      const buyAmt10 = document.getElementById('buyAmt10');
+      const buyAmtMax = document.getElementById('buyAmtMax');
+
+      function setBuyMultiplier(val, activeBtn) {
+        game.sound.playUiClick();
+        game.buyMultiplier = val;
+        [buyAmt1, buyAmt10, buyAmtMax].forEach(b => {
+          b.className = 'px-2 py-0.5 rounded text-zinc-400 hover:text-white cursor-pointer';
+        });
+        activeBtn.className = 'px-2 py-0.5 rounded bg-white text-black font-bold cursor-pointer';
+        game.renderUpgrades();
+        game.updateUI();
+      }
+
+      buyAmt1.addEventListener('click', () => setBuyMultiplier(1, buyAmt1));
+      buyAmt10.addEventListener('click', () => setBuyMultiplier(10, buyAmt10));
+      buyAmtMax.addEventListener('click', () => setBuyMultiplier('max', buyAmtMax));
+
+      document.getElementById('clickCoreBtn').addEventListener('click', (e) => game.clickCore(e));
+
+      document.getElementById('modalPromoClose').addEventListener('click', () => {
+        game.sound.playUiClick();
+        document.getElementById('promoModal').classList.add('opacity-0', 'pointer-events-none');
+      });
+
+      document.getElementById('offlineModalClose').addEventListener('click', () => {
+        game.sound.playUiClick();
+        document.getElementById('offlineModal').classList.add('opacity-0', 'pointer-events-none');
+      });
+
+      document.getElementById('btnResetModal').addEventListener('click', () => {
+        game.sound.playUiClick();
+        document.getElementById('resetModal').classList.remove('opacity-0', 'pointer-events-none');
+      });
+      document.getElementById('btnCancelReset').addEventListener('click', () => {
+        game.sound.playUiClick();
+        document.getElementById('resetModal').classList.add('opacity-0', 'pointer-events-none');
+      });
+      document.getElementById('btnConfirmReset').addEventListener('click', () => game.resetProgress());
+
+      const saveModal = document.getElementById('saveModal');
+      const saveModalTitle = document.getElementById('saveModalTitle');
+      const saveModalArea = document.getElementById('saveModalArea');
+      const saveModalActionBtn = document.getElementById('saveModalActionBtn');
+      let saveMode = 'export';
+
+      document.getElementById('btnExportSave').addEventListener('click', () => {
+        game.sound.playUiClick();
+        saveMode = 'export';
+        saveModalTitle.innerText = 'EXPORT SAVE DATA';
+        saveModalArea.value = game.exportSaveString();
+        saveModalActionBtn.innerText = 'COPY TO CLIPBOARD';
+        saveModal.classList.remove('opacity-0', 'pointer-events-none');
+      });
+
+      document.getElementById('btnImportSave').addEventListener('click', () => {
+        game.sound.playUiClick();
+        saveMode = 'import';
+        saveModalTitle.innerText = 'IMPORT SAVE DATA';
+        saveModalArea.value = '';
+        saveModalActionBtn.innerText = 'LOAD SAVE DATA';
+        saveModal.classList.remove('opacity-0', 'pointer-events-none');
+      });
+
+      document.getElementById('saveModalClose').addEventListener('click', () => {
+        game.sound.playUiClick();
+        saveModal.classList.add('opacity-0', 'pointer-events-none');
+      });
+
+      saveModalActionBtn.addEventListener('click', () => {
+        game.sound.playUiClick();
+        if (saveMode === 'export') {
+          saveModalArea.select();
+          document.execCommand('copy');
+          saveModalActionBtn.innerText = 'COPIED TO CLIPBOARD';
+          setTimeout(() => saveModalActionBtn.innerText = 'COPY TO CLIPBOARD', 1200);
+        } else {
+          game.importSaveString(saveModalArea.value);
+        }
+      });
+
+      document.getElementById('btnSignOutProfile').addEventListener('click', () => {
+        game.sound.playUiClick();
+        onboardingOverlay.classList.remove('opacity-0', 'pointer-events-none');
+      });
+
+      const soundToggleBtn = document.getElementById('soundToggleBtn');
+      const soundIconSvg = document.getElementById('soundIconSvg');
+      const settingSoundToggle = document.getElementById('settingSoundToggle');
+
+      function syncSoundUI() {
+        if (game.state.settings.sound) {
+          game.sound.enabled = true;
+          soundIconSvg.innerHTML = SVG.volumeOn;
+          settingSoundToggle.innerText = 'ENABLED';
+        } else {
+          game.sound.enabled = false;
+          soundIconSvg.innerHTML = SVG.volumeOff;
+          settingSoundToggle.innerText = 'DISABLED';
+        }
+      }
+
+      const toggleSound = () => {
+        game.state.settings.sound = !game.state.settings.sound;
+        syncSoundUI();
+        game.sound.playUiClick();
+      };
+      soundToggleBtn.addEventListener('click', toggleSound);
+      settingSoundToggle.addEventListener('click', toggleSound);
+
+      document.getElementById('btnSaveData').addEventListener('click', () => {
+        game.sound.playUiClick();
+        game.saveGameData();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && gameView.classList.contains('view-active')) {
+          e.preventDefault();
+          game.clickCore(null);
+        }
+      });
+
+      syncSoundUI();
+      game.renderUpgrades();
+      game.renderEquipment();
+      game.renderLadder();
+      game.renderLeaderboard();
+      game.updateUI();
+
+      let lastTime = performance.now();
+      function gameLoop(now) {
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+        game.tick(dt);
+        requestAnimationFrame(gameLoop);
+      }
+      requestAnimationFrame(gameLoop);
+
+      setInterval(() => {
+        game.saveGameData();
+      }, 3000);
     });
   </script>
 </body>
