@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RANKED CLICKER // EXECUTIVE EDITION</title>
+  <title>RANKED CLICKER // EXECUTIVE EDITION V8</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,6 +40,7 @@
             'spin-cw': 'spinCw 12s linear infinite',
             'spin-ccw': 'spinCcw 8s linear infinite',
             'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+            'frenzy-pulse': 'frenzyPulse 0.8s ease-in-out infinite',
           },
           keyframes: {
             spinCw: {
@@ -53,6 +54,10 @@
             pulseGlow: {
               '0%, 100%': { opacity: '0.3' },
               '50%': { opacity: '0.75' },
+            },
+            frenzyPulse: {
+              '0%, 100%': { boxShadow: '0 0 25px rgba(255, 255, 255, 0.8)' },
+              '50%': { boxShadow: '0 0 50px rgba(255, 255, 255, 1)' }
             }
           }
         }
@@ -172,7 +177,6 @@
   <!-- Ambient Dynamic Rank Glow -->
   <div id="ambientRankGlow" class="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[540px] h-[540px] rounded-full blur-[160px] opacity-15 pointer-events-none z-0 transition-colors duration-700 rank-bg-theme"></div>
 
-
   <!-- ================= ONBOARDING & ACCOUNT AUTHENTICATION OVERLAY ================= -->
   <div id="onboardingOverlay" class="fixed inset-0 z-50 bg-[#000000] flex items-center justify-center p-3 sm:p-4 transition-opacity duration-300">
     <div class="max-w-md w-full glass-exec border border-exec-border rounded-xl p-5 sm:p-7 font-mono relative overflow-hidden shadow-2xl">
@@ -184,7 +188,7 @@
           <span id="svgIconTerminalHeader" class="text-white"></span>
           <span class="text-[11px] text-white font-bold tracking-widest uppercase">EXECUTIVE ENGINE // AUTH</span>
         </div>
-        <span class="text-[10px] text-zinc-500 font-bold">MONOCHROME V7</span>
+        <span class="text-[10px] text-zinc-500 font-bold">MONOCHROME V8</span>
       </div>
 
       <!-- Terminal Console Sequence -->
@@ -260,7 +264,6 @@
     </div>
   </div>
 
-
   <!-- ================= COMPACT GLOBAL HUD HEADER ================= -->
   <header class="fixed top-0 left-0 right-0 z-40 bg-exec-panel/95 backdrop-blur-md border-b border-exec-border px-3 sm:px-6 py-2 flex items-center justify-between">
     
@@ -284,6 +287,12 @@
 
     <!-- Currency & Rates Bar -->
     <div class="flex items-center gap-2 sm:gap-4 font-mono">
+      <!-- Legacy Rebirth Multiplier Badge -->
+      <div id="hudLegacyBadge" class="hidden items-center gap-1 bg-white/10 border border-white/30 px-2 py-1 rounded-lg text-xs font-bold text-white">
+        <span>⚡ LEGACY:</span>
+        <span id="hudLegacyMultText">1.0x</span>
+      </div>
+
       <!-- Spendable Cash -->
       <div class="flex items-center gap-1.5 bg-exec-card border border-white/20 px-2.5 py-1 rounded-lg">
         <span id="svgTopCash" class="text-white"></span>
@@ -303,7 +312,6 @@
     </div>
   </header>
 
-
   <!-- ================= MAIN CONTAINER ================= -->
   <main class="relative z-10 w-full min-h-screen pt-16 pb-8 px-2 sm:px-6 max-w-7xl mx-auto flex flex-col justify-between">
 
@@ -313,7 +321,7 @@
         <div class="inline-block px-3.5 py-1 rounded-full border border-white/20 bg-white/5 mb-4 backdrop-blur">
           <span class="font-mono text-[10px] tracking-widest text-zinc-300 uppercase flex items-center gap-2">
             <span id="svgMenuSeasonIcon" class="text-white"></span>
-            COMPETITIVE LEAGUE SEASON 01 // MONOCHROME
+            COMPETITIVE LEAGUE SEASON 01 // FRENZY EDITION
           </span>
         </div>
 
@@ -327,7 +335,7 @@
           RANKED CLICKER
         </h2>
         <p class="font-mono text-[11px] text-zinc-400 max-w-md mx-auto leading-relaxed uppercase tracking-wider">
-          EXECUTIVE EDITION // ACCUMULATE RP TO UNLOCK 27 TIERS. OPEN CASES & UNLOCK GEAR LOADOUTS.
+          EXECUTIVE EDITION // ACCUMULATE RP TO UNLOCK 27 TIERS. OPEN CRATES, COMPLETE CONTRACTS & TRIGGER RANK FRENZY.
         </p>
       </div>
 
@@ -367,7 +375,6 @@
       </div>
     </section>
 
-
     <!-- ================= VIEW 2: GAME EXECUTIVE DASHBOARD ================= -->
     <section id="gameView" class="view-screen view-hidden w-full flex flex-col gap-3.5">
       
@@ -384,7 +391,7 @@
 
         <!-- Metric 2: Lifetime RP -->
         <div class="glass-exec rounded-xl p-2.5 flex flex-col justify-center border border-exec-border">
-          <span class="text-[8px] text-zinc-400 tracking-widest uppercase block">LIFETIME RP (PERMANENT)</span>
+          <span class="text-[8px] text-zinc-400 tracking-widest uppercase block">LIFETIME RP</span>
           <span id="dashRpDisplay" class="text-xs sm:text-base font-extrabold text-white tracking-tight truncate">0 RP</span>
         </div>
 
@@ -412,7 +419,7 @@
         <div class="lg:col-span-5 xl:col-span-5 flex flex-col gap-3">
           
           <!-- CLICKER CORE CONSOLE WITH RANK-CUSTOMIZED BACKDROP -->
-          <div id="arenaConsoleCard" class="glass-exec rounded-xl p-5 flex flex-col items-center justify-center text-center relative border border-exec-border min-h-[350px] overflow-hidden">
+          <div id="arenaConsoleCard" class="glass-exec rounded-xl p-5 flex flex-col items-center justify-center text-center relative border border-exec-border min-h-[360px] overflow-hidden">
             
             <!-- Arena Background Pattern Container -->
             <div id="arenaBackdropSvg" class="absolute inset-0 pointer-events-none opacity-20"></div>
@@ -421,12 +428,23 @@
               ← MAIN MENU
             </button>
 
+            <!-- FRENZY / COMBO METER OVERLAY -->
+            <div id="comboContainer" class="absolute top-3 right-3 font-mono text-[9px] bg-exec-bg/90 px-2.5 py-1 rounded-md border border-exec-border flex items-center gap-2 z-10">
+              <span class="text-zinc-400">COMBO:</span>
+              <span id="comboMultiplierText" class="text-white font-extrabold">1.0x</span>
+            </div>
+
             <!-- RP Score Counter -->
-            <div class="mt-1 mb-3 z-10">
+            <div class="mt-4 mb-2 z-10">
               <span class="font-mono text-[9px] tracking-[0.2em] text-zinc-400 uppercase block mb-0.5">CURRENT RP TOTAL</span>
               <div id="mainRpCount" class="font-mono text-3xl sm:text-4xl font-black tracking-tight text-white">
                 0 <span class="text-sm font-normal text-zinc-400">RP</span>
               </div>
+            </div>
+
+            <!-- FRENZY MODE STATUS BANNER -->
+            <div id="frenzyBanner" class="hidden mb-2 z-10 bg-white text-black font-mono font-extrabold text-[10px] px-3 py-0.5 rounded-full uppercase animate-pulse">
+              🔥 RANK FRENZY ACTIVE (3X MULTIPLIER) 🔥
             </div>
 
             <!-- DYNAMIC CLICK CORE TARGET WITH ROTATING RINGS -->
@@ -452,8 +470,13 @@
               </button>
             </div>
 
+            <!-- Combo Bar Indicator -->
+            <div class="w-44 bg-zinc-900 h-1.5 rounded-full overflow-hidden border border-exec-border mt-1 z-10">
+              <div id="comboProgressBar" class="bg-white h-full w-0 transition-all duration-150"></div>
+            </div>
+
             <!-- Yield & Keyboard Status -->
-            <div class="mt-3 font-mono text-[11px] text-zinc-400 flex items-center gap-2 z-10">
+            <div class="mt-2 font-mono text-[11px] text-zinc-400 flex items-center gap-2 z-10">
               <span>CLICK YIELD: <strong id="clickYieldDisplay" class="text-white font-bold">+1 RP</strong></span>
               <span>•</span>
               <span class="hidden sm:inline">KEY: [ SPACEBAR ]</span>
@@ -487,30 +510,30 @@
 
         </div>
 
-
         <!-- RIGHT PANEL: HIGH DENSITY COMPACT TAB SYSTEM -->
-        <div class="lg:col-span-7 xl:col-span-7 glass-exec rounded-xl border border-exec-border flex flex-col min-h-[520px] overflow-hidden">
+        <div class="lg:col-span-7 xl:col-span-7 glass-exec rounded-xl border border-exec-border flex flex-col min-h-[530px] overflow-hidden">
           
-          <!-- TAB HEADERS BAR -->
-          <div class="grid grid-cols-5 border-b border-exec-border font-mono text-[10px] sm:text-[11px]">
-            <button id="tabBtnUpgrades" class="py-2.5 text-center border-b-2 border-white text-white font-bold cursor-pointer transition-colors bg-white/5 flex items-center justify-center gap-1">
-              <span id="svgTabStoreIcon"></span>
+          <!-- TAB HEADERS BAR (7 COMPACT TABS) -->
+          <div class="grid grid-cols-7 border-b border-exec-border font-mono text-[9px] sm:text-[10px]">
+            <button id="tabBtnUpgrades" class="py-2.5 text-center border-b-2 border-white text-white font-bold cursor-pointer transition-colors bg-white/5">
               STORE
             </button>
-            <button id="tabBtnCrates" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
-              <span id="svgTabCratesIcon"></span>
+            <button id="tabBtnCrates" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors">
               CRATES
             </button>
-            <button id="tabBtnLadder" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
-              <span id="svgTabLadderIcon"></span>
+            <button id="tabBtnContracts" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors">
+              BOUNTIES
+            </button>
+            <button id="tabBtnAchievements" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors">
+              BADGES
+            </button>
+            <button id="tabBtnLadder" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors">
               RANKS
             </button>
-            <button id="tabBtnLeader" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
-              <span id="svgTabLeaderIcon"></span>
+            <button id="tabBtnLeader" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors">
               GLOBAL
             </button>
-            <button id="tabBtnSettings" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-1">
-              <span id="svgTabSettingsIcon"></span>
+            <button id="tabBtnSettings" class="py-2.5 text-center border-b-2 border-transparent text-zinc-400 hover:text-white cursor-pointer transition-colors">
               SYSTEM
             </button>
           </div>
@@ -543,7 +566,6 @@
               <!-- Upgrade Items List -->
               <div id="upgradesList" class="space-y-2 overflow-y-auto max-h-[410px] pr-1"></div>
             </div>
-
 
             <!-- TAB 2: CRATE EXCHANGE & EQUIPMENT LOADOUT -->
             <div id="tabContentCrates" class="hidden space-y-3 flex-1 flex flex-col font-mono overflow-y-auto max-h-[440px] pr-1">
@@ -585,8 +607,25 @@
 
             </div>
 
+            <!-- TAB 3: CONTRACTS & DAILY BOUNTIES -->
+            <div id="tabContentContracts" class="hidden space-y-2.5 overflow-y-auto max-h-[440px] pr-1 font-mono text-xs">
+              <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg">
+                <span class="text-[9px] text-zinc-400 uppercase block font-bold">EXECUTIVE BOUNTY OPERATIVE</span>
+                <p class="text-[10px] text-zinc-300">Complete live operational targets to earn instant Cash ($) and bonus RP surges.</p>
+              </div>
+              <div id="contractsList" class="space-y-2"></div>
+            </div>
 
-            <!-- TAB 3: RANK ROADMAP (27 TIERS) -->
+            <!-- TAB 4: ACHIEVEMENTS MATRIX -->
+            <div id="tabContentAchievements" class="hidden space-y-2.5 overflow-y-auto max-h-[440px] pr-1 font-mono text-xs">
+              <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg">
+                <span class="text-[9px] text-zinc-400 uppercase block font-bold">MONOCHROME MILESTONES</span>
+                <p class="text-[10px] text-zinc-300">Unlock competitive badges and claim tier rewards.</p>
+              </div>
+              <div id="achievementsList" class="space-y-2"></div>
+            </div>
+
+            <!-- TAB 5: RANK ROADMAP (27 TIERS) -->
             <div id="tabContentLadder" class="hidden space-y-2 overflow-y-auto max-h-[440px] pr-1 font-mono">
               <div class="text-[10px] text-zinc-400 mb-1.5 pb-1 border-b border-exec-border flex justify-between">
                 <span>27 COMPETITIVE TIERS</span>
@@ -595,8 +634,7 @@
               <div id="ladderList" class="space-y-1.5"></div>
             </div>
 
-
-            <!-- TAB 4: GLOBAL LEADERBOARD & ANALYTICS -->
+            <!-- TAB 6: GLOBAL LEADERBOARD & ANALYTICS -->
             <div id="tabContentLeader" class="hidden space-y-2.5 overflow-y-auto max-h-[440px] pr-1 font-mono text-xs">
               <div class="bg-exec-bg border border-exec-border p-2.5 rounded-lg flex items-center justify-between">
                 <div>
@@ -612,8 +650,7 @@
               <div id="leaderboardList" class="space-y-1.5"></div>
             </div>
 
-
-            <!-- TAB 5: SYSTEM & ACCOUNT PREFERENCES -->
+            <!-- TAB 7: SYSTEM & ACCOUNT PREFERENCES -->
             <div id="tabContentSettings" class="hidden space-y-3 font-mono text-xs overflow-y-auto max-h-[440px] pr-1">
               
               <!-- Account Profile Card -->
@@ -627,6 +664,22 @@
                 </div>
                 <button id="btnSignOutProfile" class="p-1.5 rounded bg-exec-bg border border-exec-border hover:border-white/40 text-zinc-400 hover:text-white transition-colors cursor-pointer" title="Switch Operator Account">
                   <span id="svgProfileLogout"></span>
+                </button>
+              </div>
+
+              <!-- LEAGUE REBIRTH / SOFT RESET (PRESTIGE) PANEL -->
+              <div class="bg-exec-bg border border-white/30 p-2.5 rounded-lg space-y-2">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="font-bold text-white uppercase">⚡ LEAGUE REBIRTH (SOFT RESET)</span>
+                  <span id="rebirthCountText" class="text-zinc-400">0 REBIRTHS</span>
+                </div>
+                <p class="text-[9px] text-zinc-400">Reset your RP & Cash to gain permanent <strong>Legacy Tokens</strong>. Each token increases ALL future RP and Cash earnings by +25%.</p>
+                <div class="flex items-center justify-between bg-exec-card p-2 rounded border border-exec-border text-[10px]">
+                  <span>REBIRTH REWARD:</span>
+                  <span id="rebirthGainTokens" class="font-bold text-white">+1 LEGACY TOKEN</span>
+                </div>
+                <button id="btnExecuteRebirth" class="w-full py-1.5 rounded bg-white text-black font-extrabold text-xs uppercase cursor-pointer hover:bg-zinc-200 transition-colors">
+                  EXECUTE LEAGUE REBIRTH
                 </button>
               </div>
 
@@ -683,16 +736,15 @@
     <footer class="w-full flex flex-col sm:flex-row items-center justify-between font-mono text-[9px] text-zinc-500 border-t border-exec-border/80 pt-3 mt-5 gap-1.5">
       <div class="flex items-center gap-1.5">
         <span id="svgFooterShield"></span>
-        RANKED CLICKER // EXECUTIVE EDITION (MONOCHROME)
+        RANKED CLICKER // EXECUTIVE EDITION V8 (MONOCHROME)
       </div>
       <div class="flex items-center gap-3">
         <span>STORE & CRATES: CASH ($)</span>
-        <span>SAVE: LOCAL ENCRYPTED V7</span>
+        <span>SAVE: LOCAL ENCRYPTED V8</span>
       </div>
     </footer>
 
   </main>
-
 
   <!-- ================= MODALS ================= -->
   
@@ -817,7 +869,6 @@
     </div>
   </div>
 
-
   <!-- ================= JAVASCRIPT ENGINE ================= -->
   <script>
     /* ================= INLINE VECTOR SVG ICON MAP (NO EMOJIS) ================= */
@@ -868,7 +919,6 @@
       return `$${(num / Math.pow(10, i * 3)).toFixed(2)}${suffixes[i]}`;
     }
 
-
     /* ================= MONOCHROME RANK METADATA & SVG BADGES ================= */
     const RANK_METADATA = [
       { name: 'BRONZE', primary: '#a1a1aa', secondary: '#3f3f46', glow: 'rgba(255, 255, 255, 0.2)', textClass: 'text-zinc-300' },
@@ -898,7 +948,6 @@
           <polygon points="50,30 65,50 50,70 35,50" fill="url(#mGrad0)" stroke="#ffffff" stroke-width="1.5"/>
           <circle cx="50" cy="50" r="4" fill="#ffffff"/>
         </svg>`,
-
         /* 1: SILVER - Polished Chrome Crest */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
@@ -909,7 +958,6 @@
           <polygon points="50,26 66,50 50,74 34,50" fill="url(#mGrad1)"/>
           <line x1="50" y1="26" x2="50" y2="74" stroke="#ffffff" stroke-width="1.5"/>
         </svg>`,
-
         /* 2: GOLD - Platinum Sunburst Crest */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
@@ -921,8 +969,7 @@
           <polygon points="50,30 62,45 50,68 38,45" fill="url(#mGrad2)"/>
           <circle cx="50" cy="48" r="5" fill="#ffffff"/>
         </svg>`,
-
-        /* 3: PLATINUM - Silver Laser Crest */
+        /* 3: PLATINUM */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad3" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
           <path d="M8 30 L38 18 L32 82 L12 65 Z" fill="url(#mGrad3)" opacity="0.6"/>
@@ -932,8 +979,7 @@
           <polygon points="50,28 68,50 50,72 32,50" fill="url(#mGrad3)"/>
           <line x1="12" y1="50" x2="88" y2="50" stroke="${p}" stroke-width="1.5" stroke-dasharray="2 2"/>
         </svg>`,
-
-        /* 4: DIAMOND - Faceted Pure Diamond Shield */
+        /* 4: DIAMOND */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="40%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
           <path d="M5 25 L35 15 L28 85 L10 65 Z" fill="url(#mGrad4)" opacity="0.75"/>
@@ -944,8 +990,7 @@
           <polygon points="50,45 10,30 50,95" fill="url(#mGrad4)" opacity="0.8"/>
           <polygon points="50,25 58,40 75,45 58,50 50,65 42,50 25,45 42,40" fill="#ffffff"/>
         </svg>`,
-
-        /* 5: MASTER - Titanium Shadow Crest */
+        /* 5: MASTER */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
           <path d="M5 15 L35 25 L25 70 L5 40 Z" fill="url(#mGrad5)"/>
@@ -956,8 +1001,7 @@
           <polygon points="50,22 66,38 66,62 50,78 34,62 34,38" fill="url(#mGrad5)"/>
           <circle cx="50" cy="50" r="6" fill="#ffffff"/>
         </svg>`,
-
-        /* 6: GRANDMASTER - Carbon Turbine Crest */
+        /* 6: GRANDMASTER */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad6" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
           <path d="M12 20 L40 30 L25 80 L5 50 Z" fill="url(#mGrad6)"/>
@@ -968,8 +1012,7 @@
           <polygon points="50,24 68,50 50,76 32,50" fill="url(#mGrad6)"/>
           <polygon points="50,34 58,50 50,66 42,50" fill="#ffffff"/>
         </svg>`,
-
-        /* 7: CHAMPION - Monochromatic Apex Crest */
+        /* 7: CHAMPION */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad7" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
           <path d="M0 20 L35 12 L30 88 L5 70 Z" fill="url(#mGrad7)" opacity="0.8"/>
@@ -979,8 +1022,7 @@
           <polygon points="50,24 70,38 70,62 50,76 30,62 30,38" fill="url(#mGrad7)"/>
           <circle cx="50" cy="50" r="8" fill="#ffffff"/>
         </svg>`,
-
-        /* 8: LEGEND - Celestial Obsidian Nexus */
+        /* 8: LEGEND */
         `<svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
           <defs><linearGradient id="mGrad8" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="${p}"/><stop offset="100%" stop-color="${s}"/></linearGradient></defs>
           <circle cx="50" cy="50" r="46" fill="none" stroke="url(#mGrad8)" stroke-width="1.5" stroke-dasharray="4 6"/>
@@ -997,7 +1039,6 @@
       return badgeSvgs[rankIndex] || badgeSvgs[0];
     }
 
-    /* ================= RANK BACKDROP VECTOR PATTERNS ================= */
     function getRankBackdropSvg(rankIndex) {
       const meta = RANK_METADATA[rankIndex] || RANK_METADATA[0];
       const p = meta.primary;
@@ -1093,7 +1134,6 @@
       });
     });
 
-
     /* ================= STORE CONFIGURATION ================= */
     const STORE_CONFIG = [
       { id: 'c1', cat: 'click', name: 'Micro Reflex', desc: '+1 Base RP per Click', baseCost: 10, val: 1, count: 0, iconSvg: SVG.target },
@@ -1157,6 +1197,23 @@
       ]
     };
 
+    /* ================= EXECUTIVE CONTRACTS & ACHIEVEMENTS DATABASE ================= */
+    const CONTRACTS_CONFIG = [
+      { id: 'cnt1', title: 'Arena Warmup', desc: 'Tap the Arena Core 100 times.', target: 100, type: 'clicks', rewardCash: 150, rewardRp: 300, claimed: false },
+      { id: 'cnt2', title: 'Capital Accumulation', desc: 'Earn $1,000 in total cash.', target: 1000, type: 'cash', rewardCash: 500, rewardRp: 1000, claimed: false },
+      { id: 'cnt3', title: 'Hardware Collector', desc: 'Open at least 2 Equipment Crates.', target: 2, type: 'crates', rewardCash: 1200, rewardRp: 2500, claimed: false },
+      { id: 'cnt4', title: 'Rank Mountaineer', desc: 'Promote your Rank 5 times.', target: 5, type: 'promotions', rewardCash: 3000, rewardRp: 8000, claimed: false }
+    ];
+
+    const ACHIEVEMENTS_CONFIG = [
+      { id: 'ach1', title: 'First Blood', desc: 'Click the Arena Core for the first time.', reqType: 'clicks', reqVal: 1, rewardCash: 50, claimed: false },
+      { id: 'ach2', title: 'Speed Demon', desc: 'Reach 50 Clicks total.', reqType: 'clicks', reqVal: 50, rewardCash: 200, claimed: false },
+      { id: 'ach3', title: 'Silver Division', desc: 'Reach Rank Silver III or higher.', reqType: 'tier', reqVal: 3, rewardCash: 500, claimed: false },
+      { id: 'ach4', title: 'High Roller', desc: 'Earn $10,000 lifetime cash.', reqType: 'cash', reqVal: 10000, rewardCash: 2500, claimed: false },
+      { id: 'ach5', title: 'Crate Collector', desc: 'Open 10 Crates in total.', reqType: 'crates', reqVal: 10, rewardCash: 5000, claimed: false },
+      { id: 'ach6', title: 'Overclock Master', desc: 'Reach Diamond III or higher.', reqType: 'tier', reqVal: 12, rewardCash: 25000, claimed: false }
+    ];
+
     /* ================= SIMULATED GLOBAL LEADERBOARD DATA ================= */
     const LEADERBOARD_SEED = [
       { tag: 'VORTEX_APEX', rp: 8500000, tier: 'LEGEND I', avatar: 2 },
@@ -1168,7 +1225,6 @@
       { tag: 'NEO_BLADE', rp: 180000, tier: 'PLATINUM I', avatar: 2 }
     ];
 
-
     /* ================= FORWARD COMPATIBLE DEEP MERGE HELPERS ================= */
     function deepMergeSave(target, source) {
       if (!source) return target;
@@ -1179,6 +1235,11 @@
               target[key].forEach(u => {
                 const matched = source[key].find(su => su.id === u.id);
                 if (matched && matched.count !== undefined) u.count = matched.count;
+              });
+            } else if (key === 'contracts' || key === 'achievements') {
+              target[key].forEach(item => {
+                const matched = source[key].find(si => si.id === item.id);
+                if (matched && matched.claimed !== undefined) item.claimed = matched.claimed;
               });
             } else {
               target[key] = source[key];
@@ -1192,7 +1253,6 @@
       }
       return target;
     }
-
 
     /* ================= SOUND SYNTHESIZER ENGINE ================= */
     class SoundEngine {
@@ -1312,7 +1372,6 @@
       }
     }
 
-
     /* ================= MAIN GAME CONTROLLER CLASS ================= */
     class Game {
       constructor() {
@@ -1327,20 +1386,31 @@
           cash: 0,
           lifetimeCash: 0,
           totalClicks: 0,
+          cratesOpened: 0,
           currentTierIndex: 0,
           highestTierIndex: 0,
           promotionsCount: 0,
+          rebirthCount: 0,
+          legacyTokens: 0,
           startTime: Date.now(),
           lastSaveTime: Date.now(),
           upgrades: JSON.parse(JSON.stringify(STORE_CONFIG)),
           equipped: { mouse: null, keyboard: null, monitor: null, pc: null },
           inventory: [],
+          contracts: JSON.parse(JSON.stringify(CONTRACTS_CONFIG)),
+          achievements: JSON.parse(JSON.stringify(ACHIEVEMENTS_CONFIG)),
           settings: { sound: true }
         };
 
         this.state = JSON.parse(JSON.stringify(this.defaultData));
         this.storeCategory = 'all';
         this.buyMultiplier = 1;
+
+        // Combo & Frenzy Engine State
+        this.comboHits = 0;
+        this.comboTimer = 0;
+        this.frenzyActive = false;
+        this.frenzyTimer = 0;
 
         this.clickPower = 1;
         this.passiveRps = 0;
@@ -1394,7 +1464,11 @@
         let rpMult = 1.0;
         let cashBoostPct = 0;
 
-        // 1. Upgrades Matrix
+        // Legacy Tokens Multiplier (+25% per token)
+        const legacyMult = 1.0 + (this.state.legacyTokens * 0.25);
+        rpMult *= legacyMult;
+
+        // Upgrades Matrix
         this.state.upgrades.forEach(u => {
           if (u.cat === 'click') baseClick += u.val * u.count;
           if (u.cat === 'prp') baseRps += u.val * u.count;
@@ -1403,7 +1477,7 @@
           if (u.id === 'perk_payout') cashBoostPct += u.val * u.count;
         });
 
-        // 2. Equipped Loadout Hardware
+        // Equipped Loadout Hardware
         Object.keys(this.state.equipped).forEach(slot => {
           const item = this.state.equipped[slot];
           if (item && item.bonus) {
@@ -1415,13 +1489,27 @@
           }
         });
 
+        // Frenzy Surge (3x RP)
+        if (this.frenzyActive) {
+          rpMult *= 3.0;
+        }
+
         this.clickPower = baseClick * clickMult * rpMult;
         this.passiveRps = baseRps * rpMult;
-        this.passiveCps = baseCps;
-        this.cashMultiplier = 1.0 + cashBoostPct;
+        this.passiveCps = baseCps * legacyMult;
+        this.cashMultiplier = (1.0 + cashBoostPct) * legacyMult;
       }
 
       clickCore(e) {
+        // Combo & Frenzy Update
+        if (!this.frenzyActive) {
+          this.comboHits++;
+          this.comboTimer = 2.0; // 2 sec decay window
+          if (this.comboHits >= 50) {
+            this.triggerFrenzyMode();
+          }
+        }
+
         const yieldRp = this.clickPower;
         this.state.rp += yieldRp;
         this.state.totalClicks++;
@@ -1442,6 +1530,18 @@
         this.spawnCleanFloatText(x, y, `+${formatRP(yieldRp)} RP`);
         this.checkAutomaticPromotion();
         this.updateUI();
+      }
+
+      triggerFrenzyMode() {
+        this.frenzyActive = true;
+        this.frenzyTimer = 10.0;
+        this.comboHits = 0;
+        this.sound.playFanfare();
+        this.calculateStats();
+
+        const btn = document.getElementById('clickCoreBtn');
+        btn.classList.add('animate-frenzy-pulse');
+        document.getElementById('frenzyBanner').classList.remove('hidden');
       }
 
       spawnCleanFloatText(x, y, text) {
@@ -1547,6 +1647,7 @@
         if (!crate || this.state.cash < crate.cost) return;
 
         this.state.cash -= crate.cost;
+        this.state.cratesOpened++;
         this.isRollingCrate = true;
         this.sound.playBuy();
         this.updateUI();
@@ -1554,22 +1655,19 @@
         const pool = ITEMS_DATABASE[crate.slot];
         if (!pool) return;
 
-        // Determine Winning Item based on weighted probability
         const winningItem = this.pickWeightedCrateItem(pool);
         this.pendingCrateItem = winningItem;
 
-        // Generate 50 items reel track for smooth scrolling animation
         const reelItems = [];
         for (let i = 0; i < 45; i++) {
           reelItems.push(pool[Math.floor(Math.random() * pool.length)]);
         }
-        const winIndex = 38; // Winning item fixed at card index 38
+        const winIndex = 38;
         reelItems[winIndex] = winningItem;
         for (let i = 46; i < 50; i++) {
           reelItems.push(pool[Math.floor(Math.random() * pool.length)]);
         }
 
-        // Setup Modal UI
         const modal = document.getElementById('crateRollModal');
         const track = document.getElementById('crateReelTrack');
         const resultPanel = document.getElementById('crateResultPanel');
@@ -1580,7 +1678,7 @@
         track.style.transform = 'translateX(0px)';
         track.innerHTML = '';
 
-        reelItems.forEach((item, idx) => {
+        reelItems.forEach((item) => {
           const card = document.createElement('div');
           card.className = `w-20 h-24 rounded-lg bg-zinc-900 border ${this.getRarityBorderClass(item.rarity)} flex-shrink-0 flex flex-col items-center justify-center p-1 font-mono text-center relative`;
           card.innerHTML = `
@@ -1593,21 +1691,17 @@
 
         modal.classList.remove('opacity-0', 'pointer-events-none');
 
-        // Trigger horizontal deceleration scroll animation
         setTimeout(() => {
           track.classList.add('reel-spinning');
-          // Card width (80px) + gap (8px) = 88px. Target card 38 offset centered
           const targetOffset = -(winIndex * 88 - (200 - 44));
           track.style.transform = `translateX(${targetOffset}px)`;
 
-          // Sound Tickers
           let tickInterval = setInterval(() => {
             this.sound.playReelTick();
           }, 120);
 
           setTimeout(() => clearInterval(tickInterval), 3200);
 
-          // Reveal Result after 4.5s
           setTimeout(() => {
             this.isRollingCrate = false;
             this.sound.playCrateWin();
@@ -1654,7 +1748,6 @@
         const slot = this.getItemSlotType(item);
 
         if (slot) {
-          // Add existing to inventory if overwritten
           if (this.state.equipped[slot]) {
             this.state.inventory.push(this.state.equipped[slot]);
           }
@@ -1722,7 +1815,98 @@
         this.renderEquipment();
       }
 
+      /* ================= CONTRACTS & ACHIEVEMENTS SYSTEM ================= */
+      claimContractReward(contractId) {
+        const cnt = this.state.contracts.find(c => c.id === contractId);
+        if (!cnt || cnt.claimed) return;
+
+        let currentVal = 0;
+        if (cnt.type === 'clicks') currentVal = this.state.totalClicks;
+        if (cnt.type === 'cash') currentVal = this.state.lifetimeCash;
+        if (cnt.type === 'crates') currentVal = this.state.cratesOpened;
+        if (cnt.type === 'promotions') currentVal = this.state.promotionsCount;
+
+        if (currentVal >= cnt.target) {
+          cnt.claimed = true;
+          this.state.cash += cnt.rewardCash;
+          this.state.lifetimeCash += cnt.rewardCash;
+          this.state.rp += cnt.rewardRp;
+
+          this.sound.playFanfare();
+          this.updateUI();
+          this.renderContracts();
+        }
+      }
+
+      claimAchievementReward(achId) {
+        const ach = this.state.achievements.find(a => a.id === achId);
+        if (!ach || ach.claimed) return;
+
+        let currentVal = 0;
+        if (ach.reqType === 'clicks') currentVal = this.state.totalClicks;
+        if (ach.reqType === 'cash') currentVal = this.state.lifetimeCash;
+        if (ach.reqType === 'crates') currentVal = this.state.cratesOpened;
+        if (ach.reqType === 'tier') currentVal = this.state.highestTierIndex;
+
+        if (currentVal >= ach.reqVal) {
+          ach.claimed = true;
+          this.state.cash += ach.rewardCash;
+          this.state.lifetimeCash += ach.rewardCash;
+
+          this.sound.playFanfare();
+          this.updateUI();
+          this.renderAchievements();
+        }
+      }
+
+      /* ================= LEAGUE REBIRTH / SOFT RESET (PRESTIGE) ================= */
+      executeRebirth() {
+        if (this.state.currentTierIndex < 5) {
+          alert('You must reach at least GOLD III to execute a League Rebirth!');
+          return;
+        }
+
+        const tokensEarned = Math.max(1, Math.floor(this.state.currentTierIndex / 5));
+        
+        if (confirm(`Execute League Rebirth? Reset RP & Cash for +${tokensEarned} Permanent Legacy Tokens (+${tokensEarned * 25}% Earnings)?`)) {
+          this.state.rebirthCount++;
+          this.state.legacyTokens += tokensEarned;
+          this.state.rp = 0;
+          this.state.cash = 0;
+          this.state.currentTierIndex = 0;
+          
+          // Reset store upgrade counts
+          this.state.upgrades.forEach(u => u.count = 0);
+
+          this.calculateStats();
+          this.applyRankTheme();
+          this.sound.playFanfare();
+          this.saveGameData();
+          this.updateUI();
+          this.renderUpgrades();
+          this.renderLadder();
+        }
+      }
+
       tick(dt) {
+        // Combo & Frenzy Decay Loop
+        if (this.frenzyActive) {
+          this.frenzyTimer -= dt;
+          if (this.frenzyTimer <= 0) {
+            this.frenzyActive = false;
+            document.getElementById('clickCoreBtn').classList.remove('animate-frenzy-pulse');
+            document.getElementById('frenzyBanner').classList.add('hidden');
+            this.calculateStats();
+          }
+        } else if (this.comboHits > 0) {
+          this.comboTimer -= dt;
+          if (this.comboTimer <= 0) {
+            this.comboHits = Math.max(0, this.comboHits - 5);
+            this.comboTimer = 0.1;
+          }
+        }
+
+        // Passive RP & Cash Accumulation
         if (this.passiveRps > 0) {
           this.state.rp += this.passiveRps * dt;
           this.checkAutomaticPromotion();
@@ -1745,9 +1929,23 @@
         document.getElementById('dashCashDisplay').innerText = formatCash(this.state.cash);
         document.getElementById('dashRpDisplay').innerText = `${formatRP(this.state.rp)} RP`;
 
+        // Legacy Badge Display
+        const legacyBadge = document.getElementById('hudLegacyBadge');
+        if (this.state.legacyTokens > 0) {
+          legacyBadge.classList.remove('hidden');
+          legacyBadge.classList.add('flex');
+          document.getElementById('hudLegacyMultText').innerText = `${(1 + this.state.legacyTokens * 0.25).toFixed(2)}x`;
+        } else {
+          legacyBadge.classList.add('hidden');
+        }
+
         // Rates
         document.getElementById('dashRpsDisplay').innerText = `+${formatRP(this.passiveRps)} RP/s`;
         document.getElementById('dashCpsDisplay').innerText = `+${formatCash(this.passiveCps)}/s`;
+
+        // Combo UI
+        document.getElementById('comboMultiplierText').innerText = this.frenzyActive ? '3.0x (FRENZY)' : `${(1 + (this.comboHits / 50) * 0.5).toFixed(1)}x`;
+        document.getElementById('comboProgressBar').style.width = `${Math.min(100, (this.comboHits / 50) * 100)}%`;
 
         // Center Arena
         document.getElementById('mainRpCount').innerHTML = `${formatRP(this.state.rp)} <span class="text-xs font-normal text-zinc-400">RP</span>`;
@@ -1779,7 +1977,12 @@
         document.getElementById('statLifetimeCash').innerText = formatCash(this.state.lifetimeCash);
         document.getElementById('statPromotions').innerText = this.state.promotionsCount.toLocaleString();
 
-        // Upgrades Store Affordability State Refresh
+        // Rebirth UI
+        document.getElementById('rebirthCountText').innerText = `${this.state.rebirthCount} REBIRTHS (${this.state.legacyTokens} TOKENS)`;
+        const potentialTokens = Math.max(1, Math.floor(this.state.currentTierIndex / 5));
+        document.getElementById('rebirthGainTokens').innerText = `+${potentialTokens} LEGACY TOKEN${potentialTokens > 1 ? 'S' : ''}`;
+
+        // Upgrades Store Affordability Refresh
         this.state.upgrades.forEach(u => {
           const el = document.getElementById(`upg-item-${u.id}`);
           if (el) {
@@ -1846,7 +2049,6 @@
       }
 
       renderEquipment() {
-        // Render 4 Active Loadout Slots
         const slotsGrid = document.getElementById('equippedSlotsGrid');
         slotsGrid.innerHTML = '';
 
@@ -1874,7 +2076,6 @@
           slotsGrid.appendChild(div);
         });
 
-        // Render Crates Store Grid
         const cratesGrid = document.getElementById('cratesStoreGrid');
         cratesGrid.innerHTML = '';
 
@@ -1900,7 +2101,6 @@
           cratesGrid.appendChild(div);
         });
 
-        // Render Inventory List
         const invList = document.getElementById('inventoryList');
         invList.innerHTML = '';
 
@@ -1934,6 +2134,86 @@
             invList.appendChild(div);
           });
         }
+      }
+
+      renderContracts() {
+        const container = document.getElementById('contractsList');
+        container.innerHTML = '';
+
+        this.state.contracts.forEach(cnt => {
+          let currentVal = 0;
+          if (cnt.type === 'clicks') currentVal = this.state.totalClicks;
+          if (cnt.type === 'cash') currentVal = this.state.lifetimeCash;
+          if (cnt.type === 'crates') currentVal = this.state.cratesOpened;
+          if (cnt.type === 'promotions') currentVal = this.state.promotionsCount;
+
+          const isReady = currentVal >= cnt.target && !cnt.claimed;
+          const pct = Math.min(100, Math.max(0, (currentVal / cnt.target) * 100));
+
+          const div = document.createElement('div');
+          div.className = `p-2.5 rounded-lg border ${cnt.claimed ? 'border-exec-border bg-exec-bg/40 opacity-50' : 'border-exec-border bg-exec-card'} space-y-1.5`;
+
+          div.innerHTML = `
+            <div class="flex items-center justify-between">
+              <h5 class="font-bold text-white uppercase">${cnt.title}</h5>
+              <span class="text-[9px] text-zinc-400">REWARD: +${formatCash(cnt.rewardCash)} & +${formatRP(cnt.rewardRp)} RP</span>
+            </div>
+            <p class="text-[10px] text-zinc-400">${cnt.desc}</p>
+            <div class="w-full bg-exec-bg border border-exec-border h-2 rounded-full overflow-hidden">
+              <div class="bg-white h-full" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex justify-between items-center pt-0.5">
+              <span class="text-[9px] text-zinc-400">${currentVal} / ${cnt.target}</span>
+              ${cnt.claimed 
+                ? '<span class="text-[9px] text-zinc-500 font-bold uppercase">COMPLETED</span>'
+                : `<button onclick="window.game.claimContractReward('${cnt.id}')" class="px-2 py-0.5 rounded ${isReady ? 'bg-white text-black font-extrabold hover:bg-zinc-200 cursor-pointer' : 'bg-exec-bg text-zinc-500 cursor-not-allowed'} text-[9px] uppercase">
+                    ${isReady ? 'CLAIM BOUNTY' : 'IN PROGRESS'}
+                  </button>`
+              }
+            </div>
+          `;
+
+          container.appendChild(div);
+        });
+      }
+
+      renderAchievements() {
+        const container = document.getElementById('achievementsList');
+        container.innerHTML = '';
+
+        this.state.achievements.forEach(ach => {
+          let currentVal = 0;
+          if (ach.reqType === 'clicks') currentVal = this.state.totalClicks;
+          if (ach.reqType === 'cash') currentVal = this.state.lifetimeCash;
+          if (ach.reqType === 'crates') currentVal = this.state.cratesOpened;
+          if (ach.reqType === 'tier') currentVal = this.state.highestTierIndex;
+
+          const isReady = currentVal >= ach.reqVal && !ach.claimed;
+
+          const div = document.createElement('div');
+          div.className = `p-2.5 rounded-lg border ${ach.claimed ? 'border-exec-border bg-exec-bg/40 opacity-50' : 'border-exec-border bg-exec-card'} flex items-center justify-between`;
+
+          div.innerHTML = `
+            <div>
+              <h5 class="font-bold text-white uppercase flex items-center gap-1.5">
+                ${ach.title}
+                ${ach.claimed ? '<span class="text-[8px] bg-white text-black px-1 rounded">UNLOCKED</span>' : ''}
+              </h5>
+              <p class="text-[10px] text-zinc-400">${ach.desc}</p>
+              <span class="text-[9px] text-zinc-400 block mt-0.5">REWARD: +${formatCash(ach.rewardCash)}</span>
+            </div>
+            <div>
+              ${ach.claimed 
+                ? '<span class="text-[9px] text-zinc-500 font-bold uppercase">CLEARED</span>'
+                : `<button onclick="window.game.claimAchievementReward('${ach.id}')" class="px-2 py-1 rounded ${isReady ? 'bg-white text-black font-extrabold hover:bg-zinc-200 cursor-pointer' : 'bg-exec-bg text-zinc-500 cursor-not-allowed'} text-[9px] uppercase">
+                    ${isReady ? 'CLAIM BADGE' : 'LOCKED'}
+                  </button>`
+              }
+            </div>
+          `;
+
+          container.appendChild(div);
+        });
       }
 
       renderLadder() {
@@ -2025,11 +2305,11 @@
 
       saveGameData() {
         this.state.lastSaveTime = Date.now();
-        localStorage.setItem('RANKED_CLICKER_SAVE_EXEC_V7', JSON.stringify(this.state));
+        localStorage.setItem('RANKED_CLICKER_SAVE_EXEC_V8', JSON.stringify(this.state));
       }
 
       loadGameData() {
-        const saved = localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V7') || localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V6');
+        const saved = localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V8') || localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V7');
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
@@ -2100,12 +2380,11 @@
       }
 
       resetProgress() {
+        localStorage.removeItem('RANKED_CLICKER_SAVE_EXEC_V8');
         localStorage.removeItem('RANKED_CLICKER_SAVE_EXEC_V7');
-        localStorage.removeItem('RANKED_CLICKER_SAVE_EXEC_V6');
         location.reload();
       }
     }
-
 
     /* ================= INITIALIZATION & EVENT BINDINGS ================= */
     document.addEventListener('DOMContentLoaded', () => {
@@ -2129,12 +2408,6 @@
       document.getElementById('svgBtnSettingsIcon').innerHTML = SVG.settings;
       document.getElementById('svgBtnSettingsArrow').innerHTML = SVG.arrowRight;
 
-      document.getElementById('svgTabStoreIcon').innerHTML = SVG.dollar;
-      document.getElementById('svgTabCratesIcon').innerHTML = SVG.box;
-      document.getElementById('svgTabLadderIcon').innerHTML = SVG.trophy;
-      document.getElementById('svgTabLeaderIcon').innerHTML = SVG.users;
-      document.getElementById('svgTabSettingsIcon').innerHTML = SVG.settings;
-
       document.getElementById('svgLoadoutIcon').innerHTML = SVG.box;
       document.getElementById('svgProfileLogout').innerHTML = SVG.logout;
       document.getElementById('svgBtnExport').innerHTML = SVG.download;
@@ -2156,7 +2429,7 @@
       window.game = game;
 
       const onboardingOverlay = document.getElementById('onboardingOverlay');
-      const savedData = localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V7') || localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V6');
+      const savedData = localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V8') || localStorage.getItem('RANKED_CLICKER_SAVE_EXEC_V7');
 
       if (!savedData) {
         runTerminalSequence();
@@ -2169,7 +2442,7 @@
         const operatorForm = document.getElementById('operatorForm');
         const lines = [
           '> RANKED CLICKER // EXECUTIVE ENGINE INITIALIZING...',
-          '> LOADING MONOCHROME SYSTEM PROTOCOL V7...',
+          '> LOADING MONOCHROME SYSTEM PROTOCOL V8...',
           '> VERIFYING SYSTEM SECURITY INTEGRITY...',
           '> CREDENTIAL AUTHORIZATION REQUIRED:'
         ];
@@ -2285,6 +2558,8 @@
       const tabs = {
         upgrades: { btn: document.getElementById('tabBtnUpgrades'), content: document.getElementById('tabContentUpgrades') },
         crates: { btn: document.getElementById('tabBtnCrates'), content: document.getElementById('tabContentCrates') },
+        contracts: { btn: document.getElementById('tabBtnContracts'), content: document.getElementById('tabContentContracts') },
+        achievements: { btn: document.getElementById('tabBtnAchievements'), content: document.getElementById('tabContentAchievements') },
         ladder: { btn: document.getElementById('tabBtnLadder'), content: document.getElementById('tabContentLadder') },
         leader: { btn: document.getElementById('tabBtnLeader'), content: document.getElementById('tabContentLeader') },
         settings: { btn: document.getElementById('tabBtnSettings'), content: document.getElementById('tabContentSettings') },
@@ -2308,6 +2583,8 @@
 
       document.getElementById('tabBtnUpgrades').addEventListener('click', () => activateTab('upgrades'));
       document.getElementById('tabBtnCrates').addEventListener('click', () => activateTab('crates'));
+      document.getElementById('tabBtnContracts').addEventListener('click', () => { activateTab('contracts'); game.renderContracts(); });
+      document.getElementById('tabBtnAchievements').addEventListener('click', () => { activateTab('achievements'); game.renderAchievements(); });
       document.getElementById('tabBtnLadder').addEventListener('click', () => activateTab('ladder'));
       document.getElementById('tabBtnLeader').addEventListener('click', () => activateTab('leader'));
       document.getElementById('tabBtnSettings').addEventListener('click', () => activateTab('settings'));
@@ -2318,6 +2595,7 @@
 
       document.getElementById('btnEquipCrateItem').addEventListener('click', () => game.equipPendingCrateItem());
       document.getElementById('btnSellCrateItem').addEventListener('click', () => game.sellPendingCrateItem());
+      document.getElementById('btnExecuteRebirth').addEventListener('click', () => game.executeRebirth());
 
       const catBtns = {
         all: document.getElementById('catBtnAll'),
@@ -2467,6 +2745,8 @@
       game.renderEquipment();
       game.renderLadder();
       game.renderLeaderboard();
+      game.renderContracts();
+      game.renderAchievements();
       game.updateUI();
 
       let lastTime = performance.now();
